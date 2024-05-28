@@ -42,9 +42,9 @@ debug: ## Prepare the app for debugging.
 	@python -m venv $(VENV_PATH)
 	@chmod +x $(VENV_PATH)/bin/activate
 	@./scripts/create-requirements.sh
-	@$(VENV_PATH)/bin/activate && pip install --upgrade pip setuptools
-	@$(VENV_PATH)/bin/activate && pip install -r app/requirements.txt
-	$(MAKE) run
+	@/bin/bash -c "source $(VENV_PATH)/bin/activate && pip install --upgrade pip setuptools"
+	@/bin/bash -c "source $(VENV_PATH)/bin/activate && pip install -r app/requirements.txt"
+	@/bin/bash -c "source $(VENV_PATH)/bin/activate && python app/src/main.py"
 
 .PHONY: run
 run:  ## Start the app in development mode.
