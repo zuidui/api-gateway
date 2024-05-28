@@ -14,6 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt && \
 # Copy the rest of the source code into the container
 COPY src /app/src
 COPY tests /app/tests
+COPY .env /app
 
 # Define environment variables
 ENV APP_PORT=${APP_PORT}

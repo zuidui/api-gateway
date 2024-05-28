@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Change directoy to root of the project
-cd "$(dirname "$0")/.."
+# Change directoy to root of the application
+cd "$(dirname "$0")/../app"
 
 ENV_FILE=".env"
 
@@ -20,7 +20,7 @@ if [ -z "$DEPENDENCIES" ]; then
 fi
 
 # Crear o sobrescribir el archivo requirements.txt
-echo "$DEPENDENCIES" | tr ' ' '\n' > app/requirements.txt
+echo "$DEPENDENCIES" | tr ' ' '\n' > requirements.txt
 
 echo "requirements.txt has been created with the following dependencies:"
-cat app/requirements.txt
+cat requirements.txt

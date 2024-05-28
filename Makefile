@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-include .env
+include app/.env
 
 SRC_PATH=./app
 VENV_PATH=.venv
