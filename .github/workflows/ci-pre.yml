@@ -17,6 +17,14 @@ jobs:
     steps:  
       - name: Check out the repository
         uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'
+      - name: Copy the environment file
+        run: cp .env .env.local
+      - name: Print environment variables
+        run: printenv
       - name: Build the Docker image
         run: make build
       - name: Run pre-commit check

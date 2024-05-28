@@ -69,6 +69,7 @@ publish-image-rc: build ## Push the release candidate to the registry.
 	docker tag $(REGISTRY):$(IMAGE_VERSION) $(REGISTRY):$(IMAGE_VERSION)-rc$(NEXT_RC)
 	docker push $(REGISTRY):$(IMAGE_VERSION)-rc$(NEXT_RC)
 
+# TODO: check if the latest tag is already present in the registry - pre and pro registry
 .PHONY: publish-image-latest
 publish-image-latest:  build ## Publish the latest release to the registry.
 	@echo "Publishing the latest image as latest- $(REGISTRY):$(LATEST_TAG) as latest"
