@@ -1,9 +1,9 @@
 import strawberry
 from typing import Optional
 
-from schema.user_schema import UserType
 from service.user_service import create_user, update_user
 
+from .user_schema import UserType
 
 @strawberry.type
 class Mutation:
