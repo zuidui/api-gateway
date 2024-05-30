@@ -8,8 +8,8 @@ from strawberry.fastapi import GraphQLRouter
 
 from utils.logger import logger_config
 from utils.config import get_settings
-from resolver.query import Query
-from resolver.mutation import Mutation
+from graphql_api.query import Query
+from graphql_api.mutation import Mutation
 
 log = logger_config(__name__)
 settings = get_settings()
