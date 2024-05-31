@@ -26,13 +26,15 @@ async def send_request(payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         )
     except httpx.RequestError as e:
         log.error(f"An error occurred while requesting {e.request.url!r}.")
+    except Exception as e:
+        log.error(f"Unexpected error: {e}")
     return None
 
 
 async def get_all_users_via_graphql() -> list[UserType]:
     query = """
     query {
-        users {
+        get_all {
             id
             name
             email
@@ -42,15 +44,16 @@ async def get_all_users_via_graphql() -> list[UserType]:
     """
     log.debug(f"Query: {query}")
     data = await send_request({"query": query})
-    users = [UserType(**user) for user in data["users"]] if data else []
+    users = [UserType(**user) for user in data["get_all"]] if data else []
     log.debug(f"Retrieved users: {users}")
     return users
 
 
+# FIX: Why cannot use user_id instead of userId on the query?
 async def get_user_by_id_via_graphql(user_id: int) -> Optional[UserType]:
     query = f"""
     query {{
-        user(id: {user_id}) {{
+        get_by_id (userId: {user_id}) {{
             id
             name
             email
@@ -60,15 +63,15 @@ async def get_user_by_id_via_graphql(user_id: int) -> Optional[UserType]:
     """
     log.debug(f"Query: {query}")
     data = await send_request({"query": query})
-    user = UserType(**data["user"]) if data else None
-    log.debug(f"Retrieved users: {user}")
+    user = UserType(**data["get_by_id"]) if data else None
+    log.debug(f"Retrieved user: {user}")
     return user
 
 
 async def create_user_via_graphql(create_user: UserInput) -> Optional[UserType]:
     mutation = f"""
     mutation {{
-        createUser(name: "{create_user.name}", email: "{create_user.email}", password: "{create_user.password}") {{
+        create (name: "{create_user.name}", email: "{create_user.email}", password: "{create_user.password}") {{
             id
             name
             email
@@ -78,15 +81,16 @@ async def create_user_via_graphql(create_user: UserInput) -> Optional[UserType]:
     """
     log.debug(f"Mutation: {mutation}")
     data = await send_request({"query": mutation})
-    user_created = UserType(**data["createUser"]) if data else None
+    user_created = UserType(**data["create"]) if data else None
     log.debug(f"User created: {user_created}")
     return user_created
 
 
+# FIX: Why cannot use user_id instead of userId on the query?
 async def update_user_via_graphql(user: UserType) -> Optional[UserType]:
     mutation = f"""
     mutation {{
-        updateUser(id: {user.id}, name: "{user.name}", email: "{user.email}", password: "{user.password}") {{
+        update (userId: {user.id}, name: "{user.name}", email: "{user.email}", password: "{user.password}") {{
             id
             name
             email
@@ -96,6 +100,6 @@ async def update_user_via_graphql(user: UserType) -> Optional[UserType]:
     """
     log.debug(f"Mutation: {mutation}")
     data = await send_request({"query": mutation})
-    user_updated = UserType(**data["updateUser"]) if data else None
+    user_updated = UserType(**data["update"]) if data else None
     log.debug(f"User updated: {user_updated}")
     return user_updated
