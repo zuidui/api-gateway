@@ -7,3 +7,10 @@ class UserType:
     name: str
     email: str
     password: str
+
+
+@strawberry.input
+class UserInput:
+    name: str
+    email: str
+    password: str

@@ -49,7 +49,7 @@ debug: ## Prepare the app for debugging.
 	@/bin/bash -c "source $(VENV_PATH)/bin/activate && python app/src/main.py"
 
 .PHONY: run
-run:  ## Start the app in development mode.
+run:  pre-commit ## Start the app in development mode.
 	@echo "Starting $(IMAGE_NAME) in development mode."
 	docker-compose -f $(SRC_PATH)/docker-compose.yml up --build $(IMAGE_NAME)
 
@@ -57,7 +57,7 @@ run:  ## Start the app in development mode.
 clean:  ## Clean the app.
 	@echo "Cleaning $(IMAGE_NAME) docker image."
 	@rm -rf $(VENV_PATH)
-	docker-compose -f $(SRC_PATH)/docker-compose.yml down
+	docker-compose -f $(SRC_PATH)/docker-compose.yml down --rmi all --volumes --remove-orphans
 
 .PHONY: build
 build:  ## Build the app.
@@ -84,8 +84,9 @@ publish-image-pro:  ## Publish the latest release to the registry.
 	@git push origin $(LATEST_VERSION)	
 	@gh release create $(LATEST_VERSION) -t $(LATEST_VERSION) -n $(LATEST_VERSION)
 
+# TODO: Implement tests
 .PHONY: test
-test:  ## Run the unit, integration and acceptance tests.
+test: build ## Run the unit, integration and acceptance tests.
 	@echo "Running the unit, integration and acceptance tests."
 	$(MAKE) test-unit
 	$(MAKE) test-integration
