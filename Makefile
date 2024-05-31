@@ -41,6 +41,7 @@ show-env:  ## Show the environment variables.
 .PHONY: debug
 debug: ## Prepare the app for debugging.
 	@echo "Preparing $(IMAGE_NAME) for debugging."
+	@[ -e $(VENV_PATH) ] && rm -rf $(VENV_PATH) || echo "The virtual environment does not exist."
 	@python -m venv $(VENV_PATH)
 	@chmod +x $(VENV_PATH)/bin/activate
 	@./scripts/create-requirements.sh
@@ -80,6 +81,7 @@ publish-image-pro:  ## Publish the latest release to the registry.
 	@docker tag $(REGISTRY_PRE):$(LATEST_TAG) $(REGISTRY_PRO):$(LATEST_VERSION)
 	@docker push $(REGISTRY_PRO):$(LATEST_VERSION)
 	@docker push $(REGISTRY_PRO):latest
+	@if [ "$(LATEST_VERSION)" == "$(IMAGE_VERSION)" ]; then git release delete $(LATEST_VERSION); fi
 	@git tag -a $(LATEST_VERSION) -m "Release $(LATEST_VERSION)"
 	@git push origin $(LATEST_VERSION)	
 	@gh release create $(LATEST_VERSION) -t $(LATEST_VERSION) -n $(LATEST_VERSION)
