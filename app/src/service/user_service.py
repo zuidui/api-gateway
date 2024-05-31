@@ -12,9 +12,13 @@ settings = get_settings()
 
 async def send_request(payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     try:
+        log.debug(
+            f"Sending request to {settings.USER_SERVICE_URL} with payload: {payload}"
+        )
         async with httpx.AsyncClient() as client:
             response = await client.post(f"{settings.USER_SERVICE_URL}", json=payload)
             response.raise_for_status()
+            log.debug(f"Response received: {response.json()}")
             return response.json().get("data")
     except httpx.HTTPStatusError as e:
         log.error(
@@ -23,20 +27,6 @@ async def send_request(payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     except httpx.RequestError as e:
         log.error(f"An error occurred while requesting {e.request.url!r}.")
     return None
-
-
-async def send_mutation(mutation: str) -> Optional[dict]:
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            f"{settings.USER_SERVICE_URL}", json={"query": mutation}
-        )
-        if response.status_code == 200:
-            return response.json()["data"]
-        else:
-            log.error(
-                f"Mutation failed with status {response.status_code}: {response.text}"
-            )
-            return None
 
 
 async def get_all_users_via_graphql() -> list[UserType]:
@@ -50,8 +40,11 @@ async def get_all_users_via_graphql() -> list[UserType]:
         }
     }
     """
+    log.debug(f"Query: {query}")
     data = await send_request({"query": query})
-    return [UserType(**user) for user in data["users"]] if data else []
+    users = [UserType(**user) for user in data["users"]] if data else []
+    log.debug(f"Retrieved users: {users}")
+    return users
 
 
 async def get_user_by_id_via_graphql(user_id: int) -> Optional[UserType]:
@@ -65,8 +58,11 @@ async def get_user_by_id_via_graphql(user_id: int) -> Optional[UserType]:
         }}
     }}
     """
+    log.debug(f"Query: {query}")
     data = await send_request({"query": query})
-    return UserType(**data["user"]) if data else None
+    user = UserType(**data["user"]) if data else None
+    log.debug(f"Retrieved users: {user}")
+    return user
 
 
 async def create_user_via_graphql(create_user: UserInput) -> Optional[UserType]:
@@ -80,8 +76,11 @@ async def create_user_via_graphql(create_user: UserInput) -> Optional[UserType]:
         }}
     }}
     """
+    log.debug(f"Mutation: {mutation}")
     data = await send_request({"query": mutation})
-    return UserType(**data["createUser"]) if data else None
+    user_created = UserType(**data["createUser"]) if data else None
+    log.debug(f"User created: {user_created}")
+    return user_created
 
 
 async def update_user_via_graphql(user: UserType) -> Optional[UserType]:
@@ -95,5 +94,8 @@ async def update_user_via_graphql(user: UserType) -> Optional[UserType]:
         }}
     }}
     """
+    log.debug(f"Mutation: {mutation}")
     data = await send_request({"query": mutation})
-    return UserType(**data["updateUser"]) if data else None
+    user_updated = UserType(**data["updateUser"]) if data else None
+    log.debug(f"User updated: {user_updated}")
+    return user_updated

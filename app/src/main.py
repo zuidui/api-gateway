@@ -55,6 +55,8 @@ def init_app():
     app.include_router(graphql_app, prefix=settings.API_PREFIX)
     app.include_router(user_router, prefix=settings.API_PREFIX)
 
+    log.info("Application created successfully")
+
     return app
 
 
