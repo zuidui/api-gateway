@@ -22,3 +22,9 @@ services:
       - APP_HOST=${APP_HOST}
       - APP_MODULE=${APP_MODULE}
       - PYTHONPATH=/app/src
+    networks:
+      - zuidui
+
+networks:
+  zuidui:
+    driver: bridge

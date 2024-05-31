@@ -6,12 +6,9 @@ pydantic
 pydantic_settings
 pytest
 pytest-xdist
-requests
-expects
 pylint
 mypy
 doublex
-graphene
 schema
-strawberry-graphql
+strawberry-graphql[fastapi]
 pytest-asyncio
