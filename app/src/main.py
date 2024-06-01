@@ -3,15 +3,12 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from strawberry import Schema
-from strawberry.fastapi import GraphQLRouter
-
 from utils.logger import logger_config
 from utils.config import get_settings
 
-from graphql_resolver.user_query import UserQuery
-from graphql_resolver.user_mutation import UserMutation
-from rest_controller.user_controller import user_router
+from routes.user import user_router
+from routes.health import health_router
+from routes.graphql import graphql_app
 
 log = logger_config(__name__)
 settings = get_settings()
@@ -49,10 +46,8 @@ def init_app():
         allow_headers=["*"],
     )
 
-    schema = Schema(query=(UserQuery), mutation=(UserMutation))
-    graphql_app = GraphQLRouter(schema, path="/graphql")
-
-    app.include_router(graphql_app, prefix=settings.API_PREFIX)
+    app.include_router(health_router)
+    app.include_router(graphql_app(), prefix=settings.API_PREFIX)
     app.include_router(user_router, prefix=settings.API_PREFIX)
 
     log.info("Application created successfully")

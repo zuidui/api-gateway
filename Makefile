@@ -49,11 +49,6 @@ debug: ## Prepare the app for debugging.
 	@/bin/bash -c "source $(VENV_PATH)/bin/activate && pip install -r app/requirements.txt"
 	@/bin/bash -c "source $(VENV_PATH)/bin/activate && python app/src/main.py"
 
-.PHONY: run
-run:  pre-commit ## Start the app in development mode.
-	@echo "Starting $(IMAGE_NAME) in development mode."
-	docker-compose -f $(SRC_PATH)/docker-compose.yml up --build $(IMAGE_NAME)
-
 .PHONY: clean
 clean:  ## Clean the app.
 	@echo "Cleaning $(IMAGE_NAME) docker image."
@@ -64,6 +59,11 @@ clean:  ## Clean the app.
 build:  ## Build the app.
 	@echo "Building $(IMAGE_NAME) docker image as $(IMAGE_NAME):$(IMAGE_VERSION)."
 	docker build -t $(REGISTRY_PRE):$(IMAGE_VERSION) $(SRC_PATH)
+
+.PHONY: run
+run:  pre-commit ## Start the app in development mode.
+	@echo "Starting $(IMAGE_NAME) in development mode."
+	docker-compose -f $(SRC_PATH)/docker-compose.yml up --build $(IMAGE_NAME)
 
 .PHONY: publish-image-pre
 publish-image-pre: build ## Push the release candidate to the registry.
