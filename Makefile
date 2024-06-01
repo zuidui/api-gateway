@@ -41,17 +41,13 @@ show-env:  ## Show the environment variables.
 .PHONY: debug
 debug: ## Prepare the app for debugging.
 	@echo "Preparing $(IMAGE_NAME) for debugging."
+	@[ -e $(VENV_PATH) ] && rm -rf $(VENV_PATH) || echo "The virtual environment does not exist."
 	@python -m venv $(VENV_PATH)
 	@chmod +x $(VENV_PATH)/bin/activate
 	@./scripts/create-requirements.sh
 	@/bin/bash -c "source $(VENV_PATH)/bin/activate && pip install --upgrade pip setuptools"
 	@/bin/bash -c "source $(VENV_PATH)/bin/activate && pip install -r app/requirements.txt"
 	@/bin/bash -c "source $(VENV_PATH)/bin/activate && python app/src/main.py"
-
-.PHONY: run
-run:  pre-commit ## Start the app in development mode.
-	@echo "Starting $(IMAGE_NAME) in development mode."
-	docker-compose -f $(SRC_PATH)/docker-compose.yml up --build $(IMAGE_NAME)
 
 .PHONY: clean
 clean:  ## Clean the app.
@@ -64,6 +60,11 @@ build:  ## Build the app.
 	@echo "Building $(IMAGE_NAME) docker image as $(IMAGE_NAME):$(IMAGE_VERSION)."
 	docker build -t $(REGISTRY_PRE):$(IMAGE_VERSION) $(SRC_PATH)
 
+.PHONY: run
+run:  pre-commit ## Start the app in development mode.
+	@echo "Starting $(IMAGE_NAME) in development mode."
+	docker-compose -f $(SRC_PATH)/docker-compose.yml up --build $(IMAGE_NAME)
+
 .PHONY: publish-image-pre
 publish-image-pre: build ## Push the release candidate to the registry.
 	@echo "Publishing the image as release candidate -  $(REGISTRY_PRE):$(IMAGE_VERSION)-rc$(NEXT_RC)"
@@ -72,6 +73,7 @@ publish-image-pre: build ## Push the release candidate to the registry.
 	@git tag -a $(IMAGE_VERSION)-rc$(NEXT_RC) -m "Release candidate $(IMAGE_VERSION)-rc$(NEXT_RC)"
 	@git push origin $(IMAGE_VERSION)-rc$(NEXT_RC)
 
+## TODO: Check if the latest version is the same as the image version error when creating release in GitHub
 .PHONY: publish-image-pro
 publish-image-pro:  ## Publish the latest release to the registry.
 	@echo "Publishing the latest image in the registry - $(REGISTRY_PRO):$(LATEST_VERSION)"
@@ -80,9 +82,11 @@ publish-image-pro:  ## Publish the latest release to the registry.
 	@docker tag $(REGISTRY_PRE):$(LATEST_TAG) $(REGISTRY_PRO):$(LATEST_VERSION)
 	@docker push $(REGISTRY_PRO):$(LATEST_VERSION)
 	@docker push $(REGISTRY_PRO):latest
-	@git tag -a $(LATEST_VERSION) -m "Release $(LATEST_VERSION)"
-	@git push origin $(LATEST_VERSION)	
-	@gh release create $(LATEST_VERSION) -t $(LATEST_VERSION) -n $(LATEST_VERSION)
+##@if [ "$(LATEST_VERSION)" == "$(IMAGE_VERSION)" ]; then git tag -d $(LATEST_VERSION); fi
+##@git tag -a $(LATEST_VERSION) -m "Release $(LATEST_VERSION)"	
+##@if [ "$(LATEST_VERSION)" == "$(IMAGE_VERSION)" ]; then git release delete $(LATEST_VERSION); fi
+##@gh release create $(LATEST_VERSION) -t $(LATEST_VERSION) -n $(LATEST_VERSION)
+##@git push origin $(LATEST_VERSION)	
 
 # TODO: Implement tests
 .PHONY: test

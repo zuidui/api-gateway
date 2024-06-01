@@ -1,9 +1,9 @@
 import strawberry
 from typing import Optional
 
-from graphql_resolver.user_schema import UserType, UserInput
+from resolvers.user_schema import UserType, UserInput
 
-from service.user_service import create_user_via_graphql, update_user_via_graphql
+from services.user_service import create_user_via_graphql, update_user_via_graphql
 
 
 @strawberry.type

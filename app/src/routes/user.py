@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
-from graphql_resolver.user_schema import UserInput, UserType
-from service.user_service import (
+from resolvers.user_schema import UserInput, UserType
+from services.user_service import (
     get_all_users_via_graphql,
     get_user_by_id_via_graphql,
     create_user_via_graphql,

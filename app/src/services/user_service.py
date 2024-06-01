@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional
 from utils.logger import logger_config
 from utils.config import get_settings
 
-from graphql_resolver.user_schema import UserType, UserInput
+from resolvers.user_schema import UserType, UserInput
 
 log = logger_config(__name__)
 settings = get_settings()
