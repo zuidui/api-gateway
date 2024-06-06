@@ -25,12 +25,12 @@ class Settings(BaseSettings):
     SECRET_KEY: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
     DOC_URL: str
     DEPENDENCIES: str
-    USER_SERVICE_HOST: str
-    USER_SERVICE_PORT: int
+    TEAM_SERVICE_HOST: str
+    TEAM_SERVICE_PORT: int
 
     @property
-    def USER_SERVICE_URL(self):
-        return f"http://{self.USER_SERVICE_HOST}:{self.USER_SERVICE_PORT}{self.API_PREFIX}/graphql"
+    def TEAM_SERVICE_URL(self):
+        return f"http://{self.TEAM_SERVICE_HOST}:{self.TEAM_SERVICE_PORT}{self.API_PREFIX}/graphql"
 
     class Config:
         env_file = ".env"

@@ -41,7 +41,7 @@ show-env:  ## Show the environment variables.
 .PHONY: debug
 debug: ## Prepare the app for debugging.
 	@echo "Preparing $(IMAGE_NAME) for debugging."
-	@[ -e $(VENV_PATH) ] && rm -rf $(VENV_PATH) || echo "The virtual environment does not exist."
+	@[ -e $(VENV_PATH) ] && rm -rf $(VENV_PATH) || echo "The virtual environment does not exist. Will create a new one."
 	@python -m venv $(VENV_PATH)
 	@chmod +x $(VENV_PATH)/bin/activate
 	@./scripts/create-requirements.sh
