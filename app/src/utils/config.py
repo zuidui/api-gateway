@@ -11,7 +11,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
 
 class Settings(BaseSettings):
     DEV: bool
-    DEBUG: bool
+    LOG_LEVEL: str
     DOCKERHUB_USERNAME: str
     AUTHOR: str
     LICENSE: str
@@ -27,10 +27,16 @@ class Settings(BaseSettings):
     DEPENDENCIES: str
     TEAM_SERVICE_HOST: str
     TEAM_SERVICE_PORT: int
+    FRONTEND_SERVICE_HOST: str
+    FRONTEND_SERVICE_PORT: int
 
     @property
     def TEAM_SERVICE_URL(self):
         return f"http://{self.TEAM_SERVICE_HOST}:{self.TEAM_SERVICE_PORT}{self.API_PREFIX}/graphql"
+
+    @property
+    def FRONTEND_SERVICE_URL(self):
+        return f"http://{self.FRONTEND_SERVICE_HOST}:{self.FRONTEND_SERVICE_PORT}"
 
     class Config:
         env_file = ".env"

@@ -3,9 +3,11 @@ from typing import Optional
 
 from resolver.player_schema import PlayerType
 
-from service.team_service import get_player_by_name_via_graphql as get_player_by_name
+from service.team_service import TeamService
 
 
 @strawberry.type
 class PlayerQuery:
-    player: Optional[PlayerType] = strawberry.field(resolver=get_player_by_name)
+    player: Optional[PlayerType] = strawberry.field(
+        resolver=TeamService.get_player_by_name_via_graphql
+    )

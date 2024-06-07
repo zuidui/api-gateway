@@ -25,6 +25,7 @@ def init_app():
     log.info(f"Application description: {settings.APP_DESCRIPTION}")
     log.info(f"API prefix: {settings.API_PREFIX}")
     log.info(f"Documentation URL: {settings.DOC_URL}")
+    log.info(f"Frontend service URL: {settings.FRONTEND_SERVICE_URL}")
     log.info(f"Team service URL: {settings.TEAM_SERVICE_URL}")
 
     app = FastAPI(
