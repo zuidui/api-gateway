@@ -1,16 +1,14 @@
 from strawberry import Schema
 
-from resolver.player_query import PlayerQuery
-from resolver.player_mutation import PlayerMutation
 from resolver.team_query import TeamQuery
 from resolver.team_mutation import TeamMutation
 
 
-class Query(TeamQuery, PlayerQuery):
+class Query(TeamQuery):
     pass
 
 
-class Mutation(TeamMutation, PlayerMutation):
+class Mutation(TeamMutation):
     pass
 
 

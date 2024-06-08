@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
-from resolver.team_schema import TeamInput
-from resolver.player_schema import PlayerInput
+from resolver.team_schema import TeamCreateRequest
 
 from service.team_service import TeamService
 
@@ -11,8 +10,8 @@ log = logger_config(__name__)
 team_router = APIRouter()
 
 
-@team_router.post("/team/create", response_model=TeamInput, tags=["Team"])
-async def create_team(request: TeamInput):
+@team_router.post("/team/create", response_model=TeamCreateRequest, tags=["Team"])
+async def create_team(request: TeamCreateRequest):
     log.info(f"Creating team with data: {request}")
     team_created = await TeamService.create_team_via_graphql(request)
     if team_created:
@@ -21,17 +20,4 @@ async def create_team(request: TeamInput):
     log.error("Failed to create team")
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST, detail="Team not created"
-    )
-
-
-@team_router.post("/team/player/create", response_model=PlayerInput, tags=["Player"])
-async def create_player(request: PlayerInput):
-    log.info(f"Creating player with data: {request}")
-    player_created = await TeamService.create_player_via_graphql(request)
-    if player_created:
-        log.info(f"Player created: {player_created}")
-        return player_created
-    log.error("Failed to create player")
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST, detail="Player not created"
     )

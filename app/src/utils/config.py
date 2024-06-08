@@ -10,8 +10,9 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
 
 
 class Settings(BaseSettings):
-    DEV: bool
+    DEBUG: bool
     LOG_LEVEL: str
+    DEBUG_PORT: int
     DOCKERHUB_USERNAME: str
     AUTHOR: str
     LICENSE: str

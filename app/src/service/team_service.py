@@ -4,8 +4,7 @@ from typing import Any, Dict, Optional
 from utils.logger import logger_config
 from utils.config import get_settings
 
-from resolver.team_schema import TeamType, TeamInput
-from resolver.player_schema import PlayerType, PlayerInput
+from resolver.team_schema import TeamCreateRequest, TeamCreateResponse
 
 log = logger_config(__name__)
 settings = get_settings()
@@ -34,98 +33,52 @@ class TeamService:
         return {}
 
     @staticmethod
-    async def create_team_via_graphql(new_team: TeamInput) -> Optional[TeamType]:
+    async def create_team_via_graphql(
+        new_team: TeamCreateRequest,
+    ):
+        # ) -> Optional[TeamCreateResponse]:
         mutation = f"""
         mutation {{
-            createTeam (newTeam: {{teamName: "{new_team.teamName}", teamPassword: "{new_team.teamPassword}"}}) {{
-                teamId
-                teamName
+            create_team (new_team: {{
+                team_name: "{new_team.team_name}", 
+                team_password: "{new_team.team_password}"
+            }}) {{
+                team_id
+                team_name
             }}
         }}
         """
         log.debug(f"Mutation: {mutation}")
-        data = await TeamService.send_request(
+        response = await TeamService.send_request(
             settings.TEAM_SERVICE_URL, {"query": mutation}
         )
-        if data and "createTeam" in data:
-            log.debug(f"Data: {data}")
-            created_team: Optional[TeamType] = TeamType(**data["createTeam"])
+
+        if response:
+            created_team_data = response["data"]["create_team"]
+            if created_team_data:
+                log.debug(f"Created team: {created_team_data}")
+                created_team: Optional[TeamCreateResponse] = TeamCreateResponse(**created_team_data)
+            else:
+                error_messages = response["errors"]
+                if error_messages:
+                    for error in error_messages:
+                        log.error(f"{error['message']}")
+                else:
+                    log.error(f"Unexpected response format: {response}")
+                created_team = None
         else:
-            log.error(f"Error creating team: {data}")
+            log.error("No response received from the team service")
             created_team = None
         return created_team
 
     @staticmethod
-    async def create_player_via_graphql(
-        new_player: PlayerInput,
-    ) -> Optional[PlayerType]:
-        mutation = f"""
-        mutation {{
-            createPlayer (playerName: "{new_player.playerName}", teamId: "{new_player.teamId}") {{
-                teamId
-                playerName
-            }}
-        }}
-        """
-        log.debug(f"Mutation: {mutation}")
-        data = await TeamService.send_request(
-            settings.TEAM_SERVICE_URL, {"query": mutation}
-        )
-        created_player: Optional[PlayerType] = (
-            PlayerType(**data["createPlayer"]) if data else None
-        )
-        log.debug(f"Player created: {created_player}")
-        return created_player
-
-    @staticmethod
-    async def get_team_by_name_via_graphql(team: TeamInput) -> Optional[TeamType]:
-        query = f"""
-        query {{
-            getTeamByName: (teamName: "{team.teamName}") {{
-                teamName
-            }}
-        }}
-        """
-        log.debug(f"Query: {query}")
-        data = await TeamService.send_request(
-            settings.TEAM_SERVICE_URL, {"query": query}
-        )
-        retrieved_team: Optional[TeamType] = (
-            TeamType(**data["getTeamByName"]) if data else None
-        )
-        log.debug(f"Team found: {retrieved_team}")
-        return retrieved_team
-
-    @staticmethod
-    async def get_player_by_name_via_graphql(
-        player: PlayerInput,
-    ) -> Optional[PlayerType]:
-        query = f"""
-        query {{
-            getPlayerByName (playerName: "{player.playerName}", teamId: "{player.teamId}") {{
-                playerName
-                teamId
-            }}
-        }}
-        """
-        log.debug(f"Query: {query}")
-        data = await TeamService.send_request(
-            settings.TEAM_SERVICE_URL, {"query": query}
-        )
-        retrieved_player: Optional[PlayerType] = (
-            PlayerType(**data["getPlayerByName"]) if data else None
-        )
-        log.debug(f"Player found: {retrieved_player}")
-        return retrieved_player
-
-    @staticmethod
     async def team_created_via_rest(
-        team_created: TeamType,
-    ) -> Optional[TeamType]:
+        team_created: TeamCreateResponse,
+    ) -> Optional[TeamCreateResponse]:
         log.debug(f"The team created is: {team_created}")
         payload = {
-            "teamId": team_created.teamId,
-            "teamName": team_created.teamName,
+            "teamId": team_created.team_id,
+            "teamName": team_created.team_name,
         }
         await TeamService.send_request(settings.FRONTEND_SERVICE_URL, payload)
         return team_created

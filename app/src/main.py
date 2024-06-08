@@ -1,4 +1,5 @@
 import uvicorn
+import debugpy  # type: ignore
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,6 +14,11 @@ from routes.graphql_router import graphql_app
 log = logger_config(__name__)
 settings = get_settings()
 
+def start_debug_server():
+    log.info("Starting debug server...")
+    debugpy.listen((settings.APP_HOST, settings.DEBUG_PORT))
+    log.info("Debug server started")
+    debugpy.wait_for_client()
 
 def init_app():
     log.info("Creating application...")
@@ -51,8 +57,10 @@ def init_app():
 
     log.info("Application created successfully")
 
-    return app
+    if settings.DEBUG: 
+        start_debug_server()
 
+    return app
 
 app = init_app()
 
