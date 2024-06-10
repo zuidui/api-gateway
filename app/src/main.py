@@ -58,6 +58,4 @@ def init_app():
 app = init_app()
 
 if __name__ == "__main__":
-    uvicorn.run(
-        app, host=settings.APP_HOST, port=settings.APP_PORT, reload=settings.DEBUG
-    )
+    uvicorn.run(app, host=settings.APP_HOST, port=settings.APP_PORT, reload=True)

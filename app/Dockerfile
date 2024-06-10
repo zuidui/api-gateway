@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED 1
 ENV PYDEVD_DISABLE_FILE_VALIDATION 1
 
 # Set the working directory within the container
-WORKDIR /workspace/app
+WORKDIR /workspace/app/src
 
 # Copy necessary files
 COPY requirements.txt .
@@ -26,11 +26,10 @@ ENV DEBUG_PORT=${DEBUG_PORT}
 ENV APP_PORT=${APP_PORT}
 ENV APP_HOST=${APP_HOST}
 ENV APP_MODULE=${APP_MODULE}
-ENV PYTHONPATH="/workspace/app/src"
 
 # Expose the port the FastAPI app will run on
 EXPOSE ${APP_PORT}
 EXPOSE ${DEBUG_PORT}
 
 # Use a single CMD instruction
-CMD python -m debugpy --listen ${APP_HOST}:${DEBUG_PORT} --wait-for-client -m uvicorn ${APP_MODULE} --host ${APP_HOST} --port ${APP_PORT} --reload
+CMD python -m debugpy --listen ${APP_HOST}:${DEBUG_PORT} -m uvicorn ${APP_MODULE} --host ${APP_HOST} --port ${APP_PORT} --reload

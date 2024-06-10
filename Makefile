@@ -2,8 +2,7 @@
 
 include app/.env
 
-SRC_PATH=./app
-VENV_PATH=.venv
+WORKDIR=./app
 export REGISTRY_PRE=$(DOCKERHUB_USERNAME)/$(IMAGE_NAME)-dev
 export REGISTRY_PRO=$(DOCKERHUB_USERNAME)/$(IMAGE_NAME)
 export TAGS=$(shell curl -s "https://hub.docker.com/v2/repositories/${REGISTRY_PRE}/tags/" | jq -r '.results[].name'| grep -E 'rc[0-9]{2}' | tr '\n' ' ')
@@ -38,27 +37,53 @@ show-env:  ## Show the environment variables.
 	@echo "LATEST_RC: $(LATEST_RC)"
 	@echo "NEXT_RC: $(NEXT_RC)"
 
-.PHONY: debug
-debug: ## Prepare the app for debugging.
+.PHONY: set-up
+set-up: ## Prepare the environment for debugging.
 	@echo "Preparing $(IMAGE_NAME) for debugging."
-	@[ -e $(VENV_PATH) ] && rm -rf $(VENV_PATH) || echo "The virtual environment does not exist."
 	@./scripts/create-requirements.sh
 
 .PHONY: clean
 clean:  ## Clean the app.
 	@echo "Cleaning $(IMAGE_NAME) docker image."
-	@rm -rf $(VENV_PATH)
-	docker-compose -f $(SRC_PATH)/docker-compose.yml down --rmi all --volumes --remove-orphans
+	docker-compose -f ./app/docker-compose.yml down --rmi all --volumes
 
 .PHONY: build
 build:  ## Build the app.
 	@echo "Building $(IMAGE_NAME) docker image as $(IMAGE_NAME):$(IMAGE_VERSION)."
-	docker build -t $(REGISTRY_PRE):$(IMAGE_VERSION) $(SRC_PATH)
+	docker build -t $(REGISTRY_PRE):$(IMAGE_VERSION) ./app
 
 .PHONY: run
 run:  pre-commit ## Start the app in development mode.
 	@echo "Starting $(IMAGE_NAME) in development mode."
-	docker-compose -f $(SRC_PATH)/docker-compose.yml up --build $(IMAGE_NAME)
+	docker-compose -f ./app/docker-compose.yml up --build $(IMAGE_NAME) --remove-orphans
+
+# TODO: Implement tests
+.PHONY: test
+test: ## Run the unit, integration and acceptance tests.
+	@echo "Running the unit, integration and acceptance tests."
+	docker-compose -f ./app/docker-compose.yml run --rm $(IMAGE_NAME) pytest -n 4 . -ra
+
+.PHONY: pre-commit
+pre-commit:  ## Run the pre-commit checks.
+	@echo "Running the pre-commit checks."
+	$(MAKE) reformat
+	$(MAKE) check-typing
+	$(MAKE) check-style
+
+.PHONY: check-typing
+check-typing:  ## Check the typing.
+	@echo "Checking the typing."
+	docker-compose -f ./app/docker-compose.yml run --rm $(IMAGE_NAME) mypy .
+
+.PHONY: check-style
+check-style:  ## Check the styling.
+	@echo "Checking the styling."
+	docker-compose -f ./app/docker-compose.yml run --rm $(IMAGE_NAME) ruff check .
+	
+.PHONY: reformat
+reformat:  ## Reformat the code.
+	@echo "Reformatting the code."
+	docker-compose -f ./app/docker-compose.yml run --rm $(IMAGE_NAME) ruff format .
 
 .PHONY: publish-image-pre
 publish-image-pre: build ## Push the release candidate to the registry.
@@ -82,48 +107,3 @@ publish-image-pro:  ## Publish the latest release to the registry.
 ##@if [ "$(LATEST_VERSION)" == "$(IMAGE_VERSION)" ]; then git release delete $(LATEST_VERSION); fi
 ##@gh release create $(LATEST_VERSION) -t $(LATEST_VERSION) -n $(LATEST_VERSION)
 ##@git push origin $(LATEST_VERSION)	
-
-# TODO: Implement tests
-.PHONY: test
-test: build ## Run the unit, integration and acceptance tests.
-	@echo "Running the unit, integration and acceptance tests."
-	$(MAKE) test-unit
-	$(MAKE) test-integration
-	$(MAKE) test-acceptance
-
-.PHONY: pre-commit
-pre-commit:  ## Run the pre-commit checks.
-	@echo "Running the pre-commit checks."
-	$(MAKE) reformat
-	$(MAKE) check-typing
-	$(MAKE) check-style
-
-.PHONY: check-typing
-check-typing:  ## Check the typing.
-	@echo "Checking the typing."
-	docker-compose -f $(SRC_PATH)/docker-compose.yml run --rm $(IMAGE_NAME) mypy .
-
-.PHONY: check-style
-check-style:  ## Check the styling.
-	@echo "Checking the styling."
-	docker-compose -f $(SRC_PATH)/docker-compose.yml run --rm $(IMAGE_NAME) ruff check .
-	
-.PHONY: reformat
-reformat:  ## Reformat the code.
-	@echo "Reformatting the code."
-	docker-compose -f $(SRC_PATH)/docker-compose.yml run --rm $(IMAGE_NAME) ruff format .
-
-.PHONY: test-unit
-test-unit:  ## Run the unit tests.
-	@echo "Running the unit tests."
-	docker-compose -f $(SRC_PATH)/docker-compose.yml run --rm $(IMAGE_NAME) pytest -n 4 tests/unit -ra 
-
-.PHONY: test-acceptance
-test-acceptance:  ## Run the acceptance tests.
-	@echo "Running the acceptance tests."
-	docker-compose -f $(SRC_PATH)/docker-compose.yml run --rm $(IMAGE_NAME) pytest -n 4 tests/acceptance -ra
-	
-.PHONY: test-integration
-test-integration:  ## Run the integration tests.
-	@echo "Running the integration tests."
-	docker-compose -f $(SRC_PATH)/docker-compose.yml run --rm $(IMAGE_NAME) pytest -n 4 tests/integration -ra

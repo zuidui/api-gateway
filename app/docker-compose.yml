@@ -14,9 +14,10 @@ services:
         - APP_MODULE=${APP_MODULE}
         - DEBUG_PORT=${DEBUG_PORT}
     volumes:
-      - ./app:/workspace/app
-      - ./.devcontainer:/workspace/.devcontainer
-      - ./.vscode:/workspace/.vscode
+      - ../app:/workspace/app
+      - ../.devcontainer:/workspace/.devcontainer
+      - ../.vscode:/workspace/.vscode
+    working_dir: /workspace/app/src
     ports:
       - ${APP_PORT}:${APP_PORT}
       - ${DEBUG_PORT}:${DEBUG_PORT}
@@ -27,7 +28,6 @@ services:
       - APP_HOST=${APP_HOST}
       - APP_MODULE=${APP_MODULE}
       - DEBUG_PORT=${DEBUG_PORT}
-      - PYTHONPATH=/workspace/app/src
     networks:
       - zuidui
 
