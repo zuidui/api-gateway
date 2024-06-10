@@ -88,9 +88,9 @@ reformat:  ## Reformat the code.
 publish-image-pre: build ## Push the release candidate to the registry.
 	@echo "Publishing the image as release candidate -  $(REGISTRY_PRE):$(IMAGE_VERSION)-rc$(NEXT_RC)"
 	@docker tag $(REGISTRY_PRE):$(IMAGE_VERSION) $(REGISTRY_PRE):$(IMAGE_VERSION)-rc$(NEXT_RC)
-	@docker tag $(REGISTRY_PRE):$(IMAGE_VERSION) $(REGISTRY_PRE):$(IMAGE_VERSION)-latest
+	@docker tag $(REGISTRY_PRE):$(IMAGE_VERSION) $(REGISTRY_PRE):latest
 	@docker push $(REGISTRY_PRE):$(IMAGE_VERSION)-rc$(NEXT_RC)
-	@docker push $(REGISTRY_PRE):$(IMAGE_VERSION)-latest
+	@docker push $(REGISTRY_PRE):latest
 
 ## TODO: Check if the latest version is the same as the image version error when creating release in GitHub
 .PHONY: publish-image-pro
