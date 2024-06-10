@@ -11,3 +11,9 @@ class TeamCreateResponse:
 class TeamCreateRequest:
     team_name: str = strawberry.field(name="team_name")
     team_password: str = strawberry.field(name="team_password")
+
+
+@strawberry.input
+class TeamCreatedRequest:
+    team_id: str = strawberry.field(name="team_id")
+    team_name: str = strawberry.field(name="team_name")

@@ -41,13 +41,8 @@ show-env:  ## Show the environment variables.
 .PHONY: debug
 debug: ## Prepare the app for debugging.
 	@echo "Preparing $(IMAGE_NAME) for debugging."
-	@[ -e $(VENV_PATH) ] && rm -rf $(VENV_PATH) || echo "The virtual environment does not exist. Will create a new one."
-	@python -m venv $(VENV_PATH)
-	@chmod +x $(VENV_PATH)/bin/activate
+	@[ -e $(VENV_PATH) ] && rm -rf $(VENV_PATH) || echo "The virtual environment does not exist."
 	@./scripts/create-requirements.sh
-	@/bin/bash -c "source $(VENV_PATH)/bin/activate && pip install --upgrade pip setuptools"
-	@/bin/bash -c "source $(VENV_PATH)/bin/activate && pip install -r app/requirements.txt"
-	@/bin/bash -c "source $(VENV_PATH)/bin/activate && python app/src/main.py"
 
 .PHONY: clean
 clean:  ## Clean the app.

@@ -4,6 +4,7 @@ services:
   api-gateway:
     container_name: ${IMAGE_NAME}
     image: ${IMAGE_NAME}:${IMAGE_VERSION}
+    restart: always
     build:
       context: .
       dockerfile: Dockerfile
@@ -13,7 +14,9 @@ services:
         - APP_MODULE=${APP_MODULE}
         - DEBUG_PORT=${DEBUG_PORT}
     volumes:
-      - ./src:/app/src
+      - ./app:/workspace/app
+      - ./.devcontainer:/workspace/.devcontainer
+      - ./.vscode:/workspace/.vscode
     ports:
       - ${APP_PORT}:${APP_PORT}
       - ${DEBUG_PORT}:${DEBUG_PORT}
@@ -24,7 +27,7 @@ services:
       - APP_HOST=${APP_HOST}
       - APP_MODULE=${APP_MODULE}
       - DEBUG_PORT=${DEBUG_PORT}
-      - PYTHONPATH=/app/src
+      - PYTHONPATH=/workspace/app/src
     networks:
       - zuidui
 

@@ -4,7 +4,11 @@ from typing import Any, Dict, Optional
 from utils.logger import logger_config
 from utils.config import get_settings
 
-from resolver.team_schema import TeamCreateRequest, TeamCreateResponse
+from resolver.team_schema import (
+    TeamCreateRequest,
+    TeamCreateResponse,
+    TeamCreatedRequest,
+)
 
 log = logger_config(__name__)
 settings = get_settings()
@@ -16,11 +20,11 @@ class TeamService:
         url: str, payload: Dict[str, Any]
     ) -> Optional[Dict[Any, Any]]:
         try:
-            log.debug(f"Sending request to {url} with payload: {payload}")
+            log.info(f"Sending request to {url} with payload: {payload}")
             async with httpx.AsyncClient() as client:
                 response = await client.post(url, json=payload)
                 response.raise_for_status()
-                log.debug(f"Response received: {response.json()}")
+                log.info(f"Response received: {response.json()}")
                 return response.json()
         except httpx.HTTPStatusError as e:
             log.error(
@@ -35,8 +39,7 @@ class TeamService:
     @staticmethod
     async def create_team_via_graphql(
         new_team: TeamCreateRequest,
-    ):
-        # ) -> Optional[TeamCreateResponse]:
+    ) -> Optional[TeamCreateResponse]:
         mutation = f"""
         mutation {{
             create_team (new_team: {{
@@ -48,7 +51,6 @@ class TeamService:
             }}
         }}
         """
-        log.debug(f"Mutation: {mutation}")
         response = await TeamService.send_request(
             settings.TEAM_SERVICE_URL, {"query": mutation}
         )
@@ -56,8 +58,10 @@ class TeamService:
         if response:
             created_team_data = response["data"]["create_team"]
             if created_team_data:
-                log.debug(f"Created team: {created_team_data}")
-                created_team: Optional[TeamCreateResponse] = TeamCreateResponse(**created_team_data)
+                log.info(f"Created team: {created_team_data}")
+                created_team: Optional[TeamCreateResponse] = TeamCreateResponse(
+                    **created_team_data
+                )
             else:
                 error_messages = response["errors"]
                 if error_messages:
@@ -73,12 +77,13 @@ class TeamService:
 
     @staticmethod
     async def team_created_via_rest(
-        team_created: TeamCreateResponse,
+        team_created: TeamCreatedRequest,
     ) -> Optional[TeamCreateResponse]:
-        log.debug(f"The team created is: {team_created}")
         payload = {
             "teamId": team_created.team_id,
             "teamName": team_created.team_name,
         }
-        await TeamService.send_request(settings.FRONTEND_SERVICE_URL, payload)
-        return team_created
+        response = await TeamService.send_request(
+            settings.FRONTEND_SERVICE_URL, payload
+        )
+        return TeamCreateResponse(**response) if response else None
