@@ -1,6 +1,7 @@
+from typing import Optional
 from fastapi import APIRouter, HTTPException, status
 
-from resolver.team_schema import TeamCreateRequest
+from resolver.team_schema import TeamCreateRequest, TeamCreateResponse
 
 from service.team_service import TeamService
 
@@ -11,7 +12,7 @@ team_router = APIRouter()
 
 
 @team_router.post("/team/create", response_model=TeamCreateRequest, tags=["Team"])
-async def create_team(request: TeamCreateRequest):
+async def create_team(request: TeamCreateRequest) -> Optional[TeamCreateResponse]:
     log.info(f"Creating team with data: {request}")
     team_created = await TeamService.create_team_via_graphql(request)
     if team_created:

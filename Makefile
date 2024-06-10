@@ -2,7 +2,6 @@
 
 include app/.env
 
-WORKDIR=./app
 export REGISTRY_PRE=$(DOCKERHUB_USERNAME)/$(IMAGE_NAME)-dev
 export REGISTRY_PRO=$(DOCKERHUB_USERNAME)/$(IMAGE_NAME)
 export TAGS=$(shell curl -s "https://hub.docker.com/v2/repositories/${REGISTRY_PRE}/tags/" | jq -r '.results[].name'| grep -E 'rc[0-9]{2}' | tr '\n' ' ')
@@ -61,7 +60,7 @@ run:  pre-commit ## Start the app in development mode.
 .PHONY: test
 test: ## Run the unit, integration and acceptance tests.
 	@echo "Running the unit, integration and acceptance tests."
-	docker-compose -f ./app/docker-compose.yml run --rm $(IMAGE_NAME) pytest -n 4 . -ra
+	docker-compose -f ./app/docker-compose.yml run --rm $(IMAGE_NAME) pytest -n 4 /workspace/app/tests -ra
 
 .PHONY: pre-commit
 pre-commit:  ## Run the pre-commit checks.
