@@ -1,10 +1,13 @@
+from fastapi.responses import JSONResponse
 import uvicorn
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from utils.logger import logger_config
 from utils.config import get_settings
+
+from exceptions.team_exceptions import TeamCreationError
 
 from routes.team_router import team_router
 from routes.health_router import health_router
@@ -50,12 +53,21 @@ def init_app():
     app.include_router(graphql_app(), prefix=settings.API_PREFIX)
     app.include_router(team_router, prefix=settings.API_PREFIX)
 
+    @app.exception_handler(TeamCreationError)
+    async def team_creation_exception_handler(request: Request, exc: TeamCreationError):
+        log.error(f"Team creation error: {exc.message}")
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"message": exc.message},
+        )
+
     log.info("Application started successfully")
 
     return app
 
 
 app = init_app()
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host=settings.APP_HOST, port=settings.APP_PORT, reload=True)

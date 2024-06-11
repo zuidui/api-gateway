@@ -1,6 +1,8 @@
 import httpx
 from typing import Any, Dict, Optional
 
+from exceptions.team_exceptions import TeamCreationError
+
 from utils.logger import logger_config
 from utils.config import get_settings
 
@@ -55,25 +57,20 @@ class TeamService:
             settings.TEAM_SERVICE_URL, {"query": mutation}
         )
 
-        if response:
-            created_team_data = response["data"]["create_team"]
-            if created_team_data:
-                log.info(f"Created team: {created_team_data}")
-                created_team: Optional[TeamCreateResponse] = TeamCreateResponse(
-                    **created_team_data
-                )
-            else:
-                error_messages = response["errors"]
-                if error_messages:
-                    for error in error_messages:
-                        log.error(f"{error['message']}")
-                else:
-                    log.error(f"Unexpected response format: {response}")
-                created_team = None
-        else:
-            log.error("No response received from the team service")
-            created_team = None
-        return created_team
+        if not response:
+            raise TeamCreationError("No response received from the team service")
+
+        created_team_data = response["data"]["create_team"]
+        if created_team_data:
+            created_team: Optional[TeamCreateResponse] = TeamCreateResponse(
+                **created_team_data
+            )
+            log.info(f"Created team: {created_team}")
+            return created_team
+
+        error_messages = response["errors"][0]["message"]
+        log.error(f"Error creating team: {error_messages}")
+        raise TeamCreationError(error_messages)
 
     @staticmethod
     async def team_created_via_rest(
