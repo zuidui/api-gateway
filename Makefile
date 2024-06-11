@@ -54,7 +54,7 @@ build:  ## Build the app.
 .PHONY: run
 run:  pre-commit ## Start the app in development mode.
 	@echo "Starting $(IMAGE_NAME) in development mode."
-	docker-compose -f ./app/docker-compose.yml up --build $(IMAGE_NAME) --remove-orphans
+	docker-compose -f ./app/docker-compose.yml up --build $(IMAGE_NAME)
 
 # TODO: Implement tests
 .PHONY: test
