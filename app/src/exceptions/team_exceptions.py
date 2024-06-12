@@ -8,3 +8,8 @@ class TeamServiceError(Exception):
 class TeamCreationError(TeamServiceError):
     def __init__(self, message: str, status_code: int = 400):
         super().__init__(message, status_code)
+
+
+class PlayerCreationError(TeamServiceError):
+    def __init__(self, message: str, status_code: int = 400):
+        super().__init__(message, status_code)

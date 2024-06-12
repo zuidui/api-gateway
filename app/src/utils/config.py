@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     TEAM_SERVICE_PORT: int
     FRONTEND_SERVICE_HOST: str
     FRONTEND_SERVICE_PORT: int
+    CACHE_HOST: str
+    CACHE_PORT: int
+    CACHE_DB: int
 
     @property
     def TEAM_SERVICE_URL(self):
