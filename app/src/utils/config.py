@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     CACHE_HOST: str
     CACHE_PORT: int
     CACHE_DB: int
+    RATING_SERVICE_HOST: str
+    RATING_SERVICE_PORT: int
+
+    @property
+    def RATING_SERVICE_URL(self):
+        return f"http://{self.RATING_SERVICE_HOST}:{self.RATING_SERVICE_PORT}{self.API_PREFIX}/graphql"
 
     @property
     def TEAM_SERVICE_URL(self):
