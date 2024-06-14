@@ -38,7 +38,7 @@ services:
 
   cache:
     container_name: ${IMAGE_NAME}-cache
-    image: redis:6.0.9
+    image: redis:latest
     restart: always
     ports:
       - 6379:6379

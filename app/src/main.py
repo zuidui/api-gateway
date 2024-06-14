@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from utils.logger import logger_config
 from utils.config import get_settings
 
-from routes.team_router import team_router
+from routes.gateway_router import app_router
 from routes.health_router import health_router
 from routes.graphql_router import graphql_app, graphql_router
 
@@ -25,7 +25,16 @@ def init_app():
     log.info(f"Debug mode: {settings.DEBUG}")
     log.info(f"Debug port: {settings.DEBUG_PORT}")
     log.info(f"API prefix: {settings.API_PREFIX}")
-    log.info(f"REST documentation URL: {settings.DOC_URL}")
+    log.info(
+        f"Service API: http://{settings.IMAGE_NAME}:{settings.APP_PORT}{settings.API_PREFIX}"
+    )
+    log.info(
+        f"Service documentation: http://{settings.IMAGE_NAME}:{settings.APP_PORT}{settings.DOC_URL}"
+    )
+    log.info(
+        f"Service health-check: http://{settings.IMAGE_NAME}:{settings.APP_PORT}/health"
+    )
+    log.info(f"Cache URL: {settings.CACHE_URL}")
     log.info(f"Frontend service URL: {settings.FRONTEND_SERVICE_URL}")
     log.info(f"Team service URL: {settings.TEAM_SERVICE_URL}")
     log.info(f"Rating service URL: {settings.RATING_SERVICE_URL}")
@@ -38,7 +47,7 @@ def init_app():
         docs_url=settings.DOC_URL,
     )
 
-    origins = ['*']
+    origins = ["*"]
 
     app.add_middleware(
         CORSMiddleware,
@@ -51,7 +60,7 @@ def init_app():
     app.include_router(health_router)
     app.include_router(graphql_router)
     app.include_router(graphql_app(), prefix=settings.API_PREFIX)
-    app.include_router(team_router, prefix=settings.API_PREFIX)    
+    app.include_router(app_router, prefix=settings.API_PREFIX)
 
     log.info("Application started successfully")
 
