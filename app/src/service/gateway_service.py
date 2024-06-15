@@ -6,6 +6,7 @@ from exceptions.gateway_exceptions import (
     PlayerCreationError,
     RatingCreationError,
     TeamCreationError,
+    TeamJoinError,
 )
 
 from utils.logger import logger_config
@@ -17,6 +18,8 @@ from resolver.team_schema import (
     TeamCreatedType,
     TeamCreateInput,
     TeamCreatedInput,
+    TeamDataInput,
+    TeamDataType,
 )
 
 from resolver.player_schema import (
@@ -156,6 +159,38 @@ class GatewayService:
         error_messages = response["errors"][0]["message"]
         log.error(f"Error creating player: {error_messages}")
         raise RatingCreationError(error_messages)
+
+    @staticmethod
+    async def join_team_via_graphql(
+        team_data: TeamDataInput,
+    ) -> Optional[TeamDataType]:
+        mutation = f"""
+        mutation {{
+            join_team (team_data: {{
+                team_name: "{team_data.team_name}", 
+                team_password: "{team_data.team_password}"
+            }}) {{
+                team_id
+                team_name
+            }}
+        }}
+        """
+        response = await GatewayService.send_request(
+            settings.TEAM_SERVICE_URL, {"query": mutation}
+        )
+
+        if not response:
+            raise TeamJoinError("No response received from the team service")
+        
+        joined_team_data = response["data"]["join_team"]
+        if joined_team_data:
+            joined_team: Optional[TeamDataType] = TeamDataType(**joined_team_data)
+            log.info(f"Joined team: {joined_team}")
+            return joined_team
+
+        error_messages = response["errors"][0]["message"]
+        log.error(f"Error joining team: {error_messages}")
+        raise TeamJoinError(error_messages)
 
     @staticmethod
     async def send_team_info_via_rest(

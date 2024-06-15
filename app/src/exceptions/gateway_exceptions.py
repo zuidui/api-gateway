@@ -28,6 +28,11 @@ class RatingCreationError(BaseServiceError):
         super().__init__(message, status_code)
 
 
+class TeamJoinError(BaseServiceError):
+    def __init__(self, message: str, status_code: int = 400):
+        super().__init__(message, status_code)
+
+
 app = FastAPI()
 
 
@@ -52,6 +57,15 @@ async def player_creation_exception_handler(request: Request, exc: PlayerCreatio
 @app.exception_handler(RatingCreationError)
 async def rating_creation_exception_handler(request: Request, exc: RatingCreationError):
     log.error(f"Rating creation error: {exc.message}")
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.message},
+    )
+
+
+@app.exception_handler(TeamJoinError)
+async def team_join_exception_handler(request: Request, exc: TeamJoinError):
+    log.error(f"Team join error: {exc.message}")
     return JSONResponse(
         status_code=exc.status_code,
         content={"message": exc.message},

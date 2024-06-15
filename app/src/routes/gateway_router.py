@@ -4,6 +4,8 @@ from fastapi import APIRouter
 from resolver.team_schema import (
     TeamCreateType,
     TeamCreateInput,
+    TeamDataInput,
+    TeamDataType,
 )
 
 from resolver.player_schema import (
@@ -13,7 +15,11 @@ from resolver.player_schema import (
 
 from service.gateway_service import GatewayService
 
-from exceptions.gateway_exceptions import PlayerCreationError, TeamCreationError
+from exceptions.gateway_exceptions import (
+    PlayerCreationError,
+    TeamCreationError,
+    TeamJoinError,
+)
 
 from utils.logger import logger_config
 
@@ -43,5 +49,18 @@ async def create_player(request: PlayerCreateInput) -> Optional[PlayerCreateType
             log.info(f"Player created: {player_created}")
             return player_created
     except PlayerCreationError as e:
+        raise e
+    return None
+
+
+@app_router.post("/team/join", response_model=TeamDataType, tags=["Team"])
+async def join_team(request: TeamDataInput) -> Optional[TeamDataType]:
+    log.info(f"Joining team with data: {request}")
+    try:
+        team_joined = await GatewayService.join_team_via_graphql(request)
+        if team_joined:
+            log.info(f"Team joined: {team_joined}")
+            return team_joined
+    except TeamJoinError as e:
         raise e
     return None

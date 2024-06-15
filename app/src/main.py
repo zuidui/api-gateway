@@ -34,6 +34,7 @@ def init_app():
     log.info(
         f"Service health-check: http://{settings.IMAGE_NAME}:{settings.APP_PORT}/health"
     )
+    log.info(f"Service schema: http://{settings.IMAGE_NAME}:{settings.APP_PORT}/schema")
     log.info(f"Cache URL: {settings.CACHE_URL}")
     log.info(f"Frontend service URL: {settings.FRONTEND_SERVICE_URL}")
     log.info(f"Team service URL: {settings.TEAM_SERVICE_URL}")
