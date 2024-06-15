@@ -1,36 +1,51 @@
 import os
-import secrets
 
 from dotenv import load_dotenv
 
-from pydantic import Field
 from pydantic_settings import BaseSettings
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
 
 
 class Settings(BaseSettings):
-    DEV: bool
     DEBUG: bool
+    DEBUG_PORT: str
+    LOG_LEVEL: str
     DOCKERHUB_USERNAME: str
-    AUTHOR: str
-    LICENSE: str
     IMAGE_NAME: str
     IMAGE_VERSION: str
     APP_MODULE: str
-    APP_PORT: int
+    APP_PORT: str
     APP_HOST: str
     APP_DESCRIPTION: str
     API_PREFIX: str
-    SECRET_KEY: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
     DOC_URL: str
     DEPENDENCIES: str
-    USER_SERVICE_HOST: str
-    USER_SERVICE_PORT: int
+    TEAM_SERVICE_HOST: str
+    TEAM_SERVICE_PORT: str
+    FRONTEND_SERVICE_HOST: str
+    FRONTEND_SERVICE_PORT: str
+    CACHE_HOST: str
+    CACHE_PORT: str
+    CACHE_DB: str
+    RATING_SERVICE_HOST: str
+    RATING_SERVICE_PORT: str
 
     @property
-    def USER_SERVICE_URL(self):
-        return f"http://{self.USER_SERVICE_HOST}:{self.USER_SERVICE_PORT}{self.API_PREFIX}/graphql"
+    def RATING_SERVICE_URL(self):
+        return f"http://{self.RATING_SERVICE_HOST}:{self.RATING_SERVICE_PORT}{self.API_PREFIX}/graphql"
+
+    @property
+    def TEAM_SERVICE_URL(self):
+        return f"http://{self.TEAM_SERVICE_HOST}:{self.TEAM_SERVICE_PORT}{self.API_PREFIX}/graphql"
+
+    @property
+    def FRONTEND_SERVICE_URL(self):
+        return f"http://{self.FRONTEND_SERVICE_HOST}:{self.FRONTEND_SERVICE_PORT}"
+
+    @property
+    def CACHE_URL(self):
+        return f"redis://{self.CACHE_HOST}:{self.CACHE_PORT}/{self.CACHE_DB}"
 
     class Config:
         env_file = ".env"

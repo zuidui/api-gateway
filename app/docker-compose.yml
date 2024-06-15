@@ -4,6 +4,7 @@ services:
   api-gateway:
     container_name: ${IMAGE_NAME}
     image: ${IMAGE_NAME}:${IMAGE_VERSION}
+    restart: always
     build:
       context: .
       dockerfile: Dockerfile
@@ -11,20 +12,44 @@ services:
         - APP_PORT=${APP_PORT}
         - APP_HOST=${APP_HOST}
         - APP_MODULE=${APP_MODULE}
+        - DEBUG_PORT=${DEBUG_PORT}
     volumes:
-      - ./src:/app/src
+      - ../app:/workspace/app
+      - ../.devcontainer:/workspace/.devcontainer
+      - ../.vscode:/workspace/.vscode
+    working_dir: /workspace/app/src
     ports:
       - ${APP_PORT}:${APP_PORT}
+      - ${DEBUG_PORT}:${DEBUG_PORT}
     env_file:
       - .env
     environment:
       - APP_PORT=${APP_PORT}
       - APP_HOST=${APP_HOST}
       - APP_MODULE=${APP_MODULE}
-      - PYTHONPATH=/app/src
+      - DEBUG_PORT=${DEBUG_PORT}
+      - CACHE_HOST=${CACHE_HOST}
+      - CACHE_PORT=${CACHE_PORT}
+      - CACHE_DB=${CACHE_DB}
+    networks:
+      - zuidui
+    depends_on:
+      - cache
+
+  cache:
+    container_name: ${IMAGE_NAME}-cache
+    image: redis:latest
+    restart: always
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/data
     networks:
       - zuidui
 
 networks:
   zuidui:
     driver: bridge
+
+volumes:
+  redis-data:
