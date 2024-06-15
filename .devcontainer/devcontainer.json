@@ -1,0 +1,32 @@
+{
+    "name": "API Gateway Dev Container",
+    "dockerComposeFile": "../app/docker-compose.yml",
+    "service": "api-gateway",
+    "workspaceFolder": "/workspace",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.shell.linux": "/bin/bash",
+                "python.pythonPath": "/usr/local/bin/python"
+            },
+            "extensions": [
+                "ms-python.python",
+                "ms-azuretools.vscode-docker",
+                "ms-python.vscode-pylance",
+                "visualstudioexptteam.vscodeintellicode"
+            ]           
+        }
+    },
+    "runServices": ["api-gateway"],
+    "shutdownAction": "stopCompose",
+    "remoteEnv": {
+        "APP_PORT": "8081",
+        "DEBUG_PORT": "5678"
+    },
+    "mounts": [
+        "source=${localWorkspaceFolder}/app,target=/workspace/app,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder}/.devcontainer,target=/workspace/.devcontainer,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder}/.vscode,target=/workspace/.vscode,type=bind,consistency=cached"
+    ],    
+    "forwardPorts": [8081, 5678]
+}
