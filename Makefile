@@ -92,7 +92,7 @@ publish-image-pre: build ## Push the release candidate to the registry.
 	@docker tag $(REGISTRY_PRE):$(IMAGE_VERSION) $(REGISTRY_PRE):$(IMAGE_VERSION)-rc$(NEXT_RC)
 	@docker tag $(REGISTRY_PRE):$(IMAGE_VERSION) $(REGISTRY_PRE):latest
 	@docker push $(REGISTRY_PRE):$(IMAGE_VERSION)-rc$(NEXT_RC)
-	@docker push $(REGISTRY_PRE):latest
+
 
 .PHONY: publish-image-pro
 publish-image-pro:  ## Publish the latest release to the registry.
