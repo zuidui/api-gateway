@@ -7,4 +7,4 @@ health_router = APIRouter()
     "/health", tags=["Sanity check"], responses={200: {"description": "Health check"}}
 )
 async def health_check():
-    return {"status": "ok"}
+    return {"status": "okey makey"}
