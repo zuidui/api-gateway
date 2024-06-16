@@ -1,0 +1,60 @@
+# Default values for zuidui.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+namespace: zuidui
+name: api-gateway
+pathtest: tfm-local/api/health
+###############
+####ingress####
+###############
+ingress:
+  name: ingress-controller
+  host: tfm-local
+  pathType: Prefix 
+  portFrontend: 8080
+  portApiGateway: 8081
+###############
+##api-gateway##
+###############
+apiGateway:
+  name: api-gateway
+  replicaCount: 3
+  image:
+    repository: zuidui/api-gateway-dev
+    tag: 0.0.2-rc00
+
+  containerPort: 8081
+
+  service:
+    type: ClusterIP
+    port: 8081
+
+  envVars:
+    - name: APP_PORT
+      value: "8081"
+    - name: APP_HOST
+      value: "0.0.0.0"
+    - name: APP_MODULE
+      value: "main:app"
+    - name: PYTHONPATH
+      value: "/app/src"
+    - name: DEBUG_PORT
+      value: "5678"
+    - name: CACHE_HOST
+      value: "redis"
+    - name: CACHE_PORT
+      value: "6379"
+    - name: CACHE_DB 
+      value: "0"
+    - name: TEAM_SERVICE_HOST
+      value: "team-service"
+    - name: TEAM_SERVICE_PORT
+      value: "8082"  
+    - name: FRONTEND_SERVICE_HOST
+      value: "frontend"
+    - name: FRONTEND_SERVICE_PORT
+      value: "8080"
+    - name: RATING_SERVICE_HOST
+      value: "rating-service"
+    - name: RATING_SERVICE_PORT
+      value: "8083"
