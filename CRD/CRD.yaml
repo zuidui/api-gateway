@@ -14,7 +14,7 @@ spec:
     automated: {} # to syncronize automatically
   source:
   #desplegamos con HELM, hay que hacerlo obligatoriamente para usar Image Updater
-    path: chart/api-gateway 
+    path: helm/api-gateway 
     repoURL: https://github.com/zuidui/api-gateway.git
     targetRevision: dev
   destination:
