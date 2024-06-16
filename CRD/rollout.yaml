@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: api-gateway-rollout
+spec:
+  replicas: 5
+  strategy:
+    canary:
+      steps:
+        - setWeight: 20
+        - pause: {duration: 20s}
+        - setWeight: 50
+        - pause: {duration: 20s}
+        - setWeight: 100
+  selector:
+    matchLabels:
+      app: api-gateway-rollout
+  template:
+    metadata:
+      labels:
+        app: api-gateway-rollout
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: api-gateway-rollout
+          image: zuidui/api-gateway-dev:0.0.1-rc21
+          env:
+            - name: API_PORT
+              value: 8081
+          ports:
+            - containerPort: 8081

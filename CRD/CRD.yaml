@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+#muy importante para usar Image Updater
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: myalias=zuidui/api-gateway-dev
+    argocd-image-updater.argoproj.io/myalias.helm.image-tag: image.tag
+    argocd-image-updater.argoproj.io/myalias.helm.image-name: image.repository
+    argocd-image-updater.argoproj.io/myalias.update-strategy: latest
+  name: api-gateway-dev
+  namespace: argocd
+spec:
+  syncPolicy:
+    automated: {} # to syncronize automatically
+  source:
+  #desplegamos con HELM, hay que hacerlo obligatoriamente para usar Image Updater
+    path: chart/api-gateway 
+    repoURL: https://github.com/zuidui/api-gateway.git
+    targetRevision: dev
+  destination:
+    server: 'https://kubernetes.default.svc' #Target cluster 
+    namespace: zuidui #namespace where we want to deploy
+  project: default

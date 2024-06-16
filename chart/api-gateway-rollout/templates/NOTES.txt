@@ -1,0 +1,2 @@
+check the api service is active:
+  http://{{ .Values.ingress.host }}/api/health
