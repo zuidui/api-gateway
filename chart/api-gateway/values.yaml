@@ -21,7 +21,7 @@ apiGateway:
   replicaCount: 3 
   image:
     repository: zuidui/api-gateway-dev
-    tag: 0.0.2-rc00
+    tag: 0.0.2-rc07
 
   containerPort: 8081
 
