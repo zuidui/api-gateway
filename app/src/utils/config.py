@@ -25,9 +25,6 @@ class Settings(BaseSettings):
     TEAM_SERVICE_PORT: str
     FRONTEND_SERVICE_HOST: str
     FRONTEND_SERVICE_PORT: str
-    CACHE_HOST: str
-    CACHE_PORT: str
-    CACHE_DB: str
     RATING_SERVICE_HOST: str
     RATING_SERVICE_PORT: str
 
@@ -42,10 +39,6 @@ class Settings(BaseSettings):
     @property
     def FRONTEND_SERVICE_URL(self):
         return f"http://{self.FRONTEND_SERVICE_HOST}:{self.FRONTEND_SERVICE_PORT}"
-
-    @property
-    def CACHE_URL(self):
-        return f"redis://{self.CACHE_HOST}:{self.CACHE_PORT}/{self.CACHE_DB}"
 
     class Config:
         env_file = ".env"

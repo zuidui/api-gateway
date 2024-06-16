@@ -1,15 +1,14 @@
+from typing import List
 import strawberry
 
 
-@strawberry.type
-class RatingType:
+@strawberry.input
+class PlayerRatingInputType:
     player_id: int = strawberry.field(name="player_id")
-    player_score: int = strawberry.field(name="player_score")
-    player_team_id: int = strawberry.field(name="player_team_id")
+    player_average_rating: int = strawberry.field(name="player_average_rating")
 
 
 @strawberry.input
-class RatingInput:
-    player_id: int = strawberry.field(name="player_id")
-    player_score: int = strawberry.field(name="player_score")
-    player_team_id: int = strawberry.field(name="player_team_id")
+class PlayerRatingInput:
+    team_id: int = strawberry.field(name="team_id")
+    players: List[PlayerRatingInputType] = strawberry.field(name="players")

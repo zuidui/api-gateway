@@ -23,7 +23,7 @@ class PlayerCreationError(BaseServiceError):
         super().__init__(message, status_code)
 
 
-class RatingCreationError(BaseServiceError):
+class TeamInfoError(BaseServiceError):
     def __init__(self, message: str, status_code: int = 400):
         super().__init__(message, status_code)
 
@@ -54,9 +54,9 @@ async def player_creation_exception_handler(request: Request, exc: PlayerCreatio
     )
 
 
-@app.exception_handler(RatingCreationError)
-async def rating_creation_exception_handler(request: Request, exc: RatingCreationError):
-    log.error(f"Rating creation error: {exc.message}")
+@app.exception_handler(TeamInfoError)
+async def team_info_exception_handler(request: Request, exc: TeamInfoError):
+    log.error(f"Team info error: {exc.message}")
     return JSONResponse(
         status_code=exc.status_code,
         content={"message": exc.message},

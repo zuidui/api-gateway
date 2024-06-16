@@ -1,28 +1,7 @@
+from typing import List
 import strawberry
 
-
-@strawberry.type
-class TeamCreateType:
-    team_id: int = strawberry.field(name="team_id")
-    team_name: str = strawberry.field(name="team_name")
-
-
-@strawberry.type
-class TeamCreatedType:
-    team_id: int = strawberry.field(name="team_id")
-    team_name: str = strawberry.field(name="team_name")
-
-
-@strawberry.input
-class TeamCreateInput:
-    team_name: str = strawberry.field(name="team_name")
-    team_password: str = strawberry.field(name="team_password")
-
-
-@strawberry.input
-class TeamCreatedInput:
-    team_id: str = strawberry.field(name="team_id")
-    team_name: str = strawberry.field(name="team_name")
+from resolver.player_schema import PlayerDataType, PlayerDetailsType
 
 
 @strawberry.type
@@ -36,7 +15,22 @@ class TeamDataInput:
     team_name: str = strawberry.field(name="team_name")
     team_password: str = strawberry.field(name="team_password")
 
+
 @strawberry.input
-class TeamJoinedInput:
+class TeamModifiedInput:
+    team_id: str = strawberry.field(name="team_id")
+    team_name: str = strawberry.field(name="team_name")
+
+
+@strawberry.type
+class TeamInfoType:
     team_id: int = strawberry.field(name="team_id")
     team_name: str = strawberry.field(name="team_name")
+    team_players: List[PlayerDataType] = strawberry.field(name="team_players")
+
+
+@strawberry.input
+class TeamInfoInput:
+    team_id: int = strawberry.field(name="team_id")
+    team_name: str = strawberry.field(name="team_name")
+    players_data: List[PlayerDetailsType] = strawberry.field(name="players_data")

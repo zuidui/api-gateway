@@ -2,15 +2,13 @@ from typing import Optional
 from fastapi import APIRouter
 
 from resolver.team_schema import (
-    TeamCreateType,
-    TeamCreateInput,
     TeamDataInput,
     TeamDataType,
 )
 
 from resolver.player_schema import (
-    PlayerCreateType,
-    PlayerCreateInput,
+    PlayerDataType,
+    PlayerDataInput,
 )
 
 from service.gateway_service import GatewayService
@@ -27,8 +25,8 @@ log = logger_config(__name__)
 app_router = APIRouter()
 
 
-@app_router.post("/team/create", response_model=TeamCreateType, tags=["Team"])
-async def create_team(request: TeamCreateInput) -> Optional[TeamCreateType]:
+@app_router.post("/team/create", response_model=TeamDataType, tags=["Team"])
+async def create_team(request: TeamDataInput) -> Optional[TeamDataType]:
     log.info(f"Creating team with data: {request}")
     try:
         team_created = await GatewayService.create_team_via_graphql(request)
@@ -40,8 +38,8 @@ async def create_team(request: TeamCreateInput) -> Optional[TeamCreateType]:
     return None
 
 
-@app_router.post("/team/player/create", response_model=PlayerCreateType, tags=["Team"])
-async def create_player(request: PlayerCreateInput) -> Optional[PlayerCreateType]:
+@app_router.post("/team/player/create", response_model=PlayerDataType, tags=["Team"])
+async def create_player(request: PlayerDataInput) -> Optional[PlayerDataType]:
     log.info(f"Creating player with data: {request}")
     try:
         player_created = await GatewayService.create_player_via_graphql(request)

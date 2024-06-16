@@ -2,18 +2,16 @@ import strawberry
 from typing import Annotated, Optional
 
 from resolver.team_schema import (
-    TeamCreatedType,
-    TeamCreatedInput,
     TeamDataType,
-    TeamJoinedInput,
+    TeamInfoInput,
+    TeamInfoType,
+    TeamModifiedInput,
 )
 
-from resolver.player_schema import (
-    PlayerCreateInput,
-    PlayerInfoType,
-)
+from resolver.player_schema import PlayerDetailsType
 
-from data.cache import redis_client
+from resolver.rating_schema import PlayerRatingInput
+
 
 from service.gateway_service import GatewayService
 
@@ -23,55 +21,46 @@ class Mutation:
     @strawberry.mutation(name="team_created")
     async def team_created(
         self,
-        new_team: Annotated[TeamCreatedInput, strawberry.argument(name="new_team")],
-    ) -> Optional[TeamCreatedType]:
-        return await GatewayService.send_team_info_via_rest(new_team)
+        new_team: Annotated[TeamModifiedInput, strawberry.argument(name="new_team")],
+    ) -> Optional[TeamDataType]:
+        return await GatewayService.send_team_info_via_rest(new_team)    
 
-    @strawberry.mutation(name="player_created")
-    async def player_created(
-        self,
-        new_player: Annotated[
-            PlayerCreateInput, strawberry.argument(name="new_player")
-        ],
-    ) -> Optional[PlayerInfoType]:
-        team_id = new_player.player_team_id
-        redis_client.set_message(f"team_message_{team_id}", new_player.player_name)
-        return await GatewayService.player_info_check_and_consolidate(team_id)
-    
     @strawberry.mutation(name="team_joined")
     async def team_joined(
         self,
-        team_data: Annotated[TeamJoinedInput, strawberry.argument(name="team_data")],
+        team_data: Annotated[TeamModifiedInput, strawberry.argument(name="team_data")],
     ) -> Optional[TeamDataType]:
         return await GatewayService.send_team_info_via_rest(team_data)
 
-    # FIXME: I think the following mutations are not needed
-    #@strawberry.mutation(name="create_team")
-    #async def create_team(
-    #    self,
-    #    new_team: Annotated[TeamCreateInput, strawberry.argument(name="new_team")],
-    #) -> Optional[TeamCreateType]:
-    #    return await GatewayService.create_team_via_graphql(new_team)
-    #
-    #@strawberry.mutation(name="create_player")
-    #async def create_player(
-    #    self,
-    #    new_player: Annotated[
-    #        PlayerCreateInput, strawberry.argument(name="new_player")
-    #    ],
-    #) -> Optional[PlayerCreateType]:
-    #    return await GatewayService.create_player_via_graphql(new_player)
-    #
-    #@strawberry.mutation(name="create_score")
-    #async def create_score(
-    #    self,
-    #    new_score: Annotated[RatingInput, strawberry.argument(name="new_score")],
-    #) -> Optional[RatingType]:
-    #    return await GatewayService.create_score_via_graphql(new_score)
-    #
-    #@strawberry.mutation(name="join_team")
-    #async def join_team(
-    #    self,
-    #    team_join: Annotated[TeamJoinInput, strawberry.argument(name="team_join")],
-    #) -> Optional[TeamJoinType]:
-    #    return await GatewayService.join_team_via_graphql(team_join)
+    @strawberry.mutation(name="rating_updated")
+    async def rating_updated(
+        self,
+        team_data: Annotated[PlayerRatingInput, strawberry.argument(name="team_data")],
+    ) -> Optional[TeamInfoType]:
+        players_data = await GatewayService.get_players_data_via_graphql(
+            team_data.team_id
+        )
+
+        if not players_data:
+            return None
+
+        team_data_dict = {
+            player.player_id: player.player_average_rating
+            for player in team_data.players
+        }
+
+        players_details = [
+            PlayerDetailsType(
+                player_name=player.player_name,
+                player_average_rating=team_data_dict[player.player_id],
+            )
+            for player in players_data.team_players
+            if player.player_id in team_data_dict
+        ]
+
+        team_details = TeamInfoInput(
+            team_id=players_data.team_id,
+            team_name=players_data.team_name,
+            players_data=players_details,
+        )
+        return await GatewayService.send_team_details_via_rest(team_details)
