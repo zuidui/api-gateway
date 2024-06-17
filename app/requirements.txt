@@ -13,5 +13,4 @@ doublex
 schema
 strawberry-graphql[fastapi]
 pytest-asyncio
-redis
-types-redis
+aio-pika

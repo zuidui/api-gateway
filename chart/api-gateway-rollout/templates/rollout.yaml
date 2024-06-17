@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: api-gateway-rollout
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.apiGateway.replicaCount }}
+  strategy:
+    canary:
+      steps:
+        - setWeight: 20
+        - pause: {duration: 20s}
+        - setWeight: 50
+        - pause: {duration: 20s}
+        - setWeight: 100
+  selector:
+    matchLabels:
+      app: api-gateway-rollout
+  template:
+    metadata:
+      labels:
+        app: api-gateway-rollout
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: api-gateway-rollout   
+          image: "{{ .Values.apiGateway.image.repository }}:{{ .Values.apiGateway.image.tag }}"
+          env:
+            {{- toYaml .Values.apiGateway.envVars | nindent 12 }}
+          ports:
+            - containerPort: {{ .Values.apiGateway.service.port }}

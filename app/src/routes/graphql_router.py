@@ -11,6 +11,8 @@ def graphql_app():
 graphql_router = APIRouter()
 
 
-@graphql_router.get("/schema")
+@graphql_router.get(
+    "/schema", tags=["Sanity check"], responses={200: {"description": "Get the schema"}}
+)
 def get_schema():
     return schema.as_str()

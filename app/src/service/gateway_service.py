@@ -1,66 +1,108 @@
-import json
+import asyncio
+from fastapi import FastAPI
 import httpx
 from typing import Any, Dict, Optional
 
 from exceptions.gateway_exceptions import (
-    PlayerCreationError,
-    RatingCreationError,
-    TeamCreationError,
+    TeamError,
+    PlayerError,
 )
 
 from utils.logger import logger_config
 from utils.config import get_settings
-from data.cache import redis_client
 
 from resolver.team_schema import (
-    TeamCreateType,
-    TeamCreatedType,
-    TeamCreateInput,
-    TeamCreatedInput,
+    TeamDataType,
 )
 
 from resolver.player_schema import (
-    PlayerCreateType,
-    PlayerCreateInput,
-    PlayerInfoType,
-    PlayerInfoInput,
+    PlayerDataType,
 )
 
-from resolver.rating_schema import (
-    RatingInput,
-    RatingType,
+from models.team_model import (
+    TeamData,
+    TeamDetails,
+    TeamDataInput,
 )
+
+from models.player_model import (
+    PlayerDataInput,
+    PlayerDetails,
+)
+
 
 log = logger_config(__name__)
 settings = get_settings()
 
 
 class GatewayService:
+    message_store: Dict[str, Any] = {}
+    message_condition: Dict[str, asyncio.Condition] = {}
+
     @staticmethod
     async def send_request(
         url: str, payload: Dict[str, Any]
     ) -> Optional[Dict[Any, Any]]:
         try:
             log.info(f"Sending request to {url} with payload: {payload}")
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=5) as client:
                 response = await client.post(url, json=payload)
                 response.raise_for_status()
-                log.info(f"Response received: {response.json()}")
+                log.info(f"Response received from {url}: {response.json()}")
                 return response.json()
         except httpx.HTTPStatusError as e:
             log.error(
                 f"Request to {url} failed with status {e.response.status_code}: {e.response.text}"
             )
         except httpx.RequestError as e:
-            log.error(f"An error occurred while requesting {e.request.url!r} - {e}")
+            log.error(f"Request to {url} failed: {e}")
         except Exception as e:
             log.error(f"Unexpected error: {e}")
         return {}
 
     @staticmethod
-    async def create_team_via_graphql(
-        new_team: TeamCreateInput,
-    ) -> Optional[TeamCreateType]:
+    async def wait_for_event(event_type: str, timeout: int = 5) -> Optional[Any]:
+        if event_type not in GatewayService.message_condition:
+            GatewayService.message_condition[event_type] = asyncio.Condition()
+
+        condition = GatewayService.message_condition[event_type]
+        async with condition:
+            try:
+                await asyncio.wait_for(condition.wait(), timeout)
+                return GatewayService.message_store.pop(event_type, None)
+            except asyncio.TimeoutError:
+                log.error(f"Timeout waiting for response to event type {event_type}")
+                return None
+            finally:
+                if event_type in GatewayService.message_condition:
+                    del GatewayService.message_condition[event_type]
+
+    @staticmethod
+    async def handle_message(
+        app: FastAPI, message: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        event_type = message["event_type"]
+        data = message["data"]
+        result_dict: Optional[Dict[str, Any]] = None
+        if event_type == "team_created" or event_type == "team_joined":
+            result = TeamData(**data)
+            result_dict = result.__dict__
+        else:
+            log.info(f"Event type {event_type} consumed but not handled.")
+            result_dict = data
+
+        if event_type in GatewayService.message_condition:
+            async with GatewayService.message_condition[event_type]:
+                GatewayService.message_store[event_type] = result_dict
+                GatewayService.message_condition[event_type].notify_all()
+        else:
+            log.error(f"Event type {event_type} not being waited for.")
+        return result_dict
+
+    @staticmethod
+    async def create_team(
+        new_team: TeamDataInput,
+    ) -> Optional[TeamDataType]:
         mutation = f"""
         mutation {{
             create_team (new_team: {{
@@ -77,27 +119,27 @@ class GatewayService:
         )
 
         if not response:
-            raise TeamCreationError("No response received from the team service")
+            raise TeamError("No response received from the team service")
 
         created_team_data = response["data"]["create_team"]
         if created_team_data:
-            created_team: Optional[TeamCreateType] = TeamCreateType(**created_team_data)
+            created_team: Optional[TeamDataType] = TeamDataType(**created_team_data)
             log.info(f"Created team: {created_team}")
             return created_team
 
         error_messages = response["errors"][0]["message"]
         log.error(f"Error creating team: {error_messages}")
-        raise TeamCreationError(error_messages)
+        raise TeamError(error_messages)
 
     @staticmethod
-    async def create_player_via_graphql(
-        new_player: PlayerCreateInput,
-    ) -> Optional[PlayerCreateType]:
+    async def create_player(
+        new_player: PlayerDataInput,
+    ) -> Optional[PlayerDataType]:
         mutation = f"""
         mutation {{
             create_player (new_player: {{
                 player_name: "{new_player.player_name}", 
-                player_team_id: {new_player.player_team_id}
+                team_name: "{new_player.team_name}"
             }}) {{
                 player_id
                 player_name
@@ -109,11 +151,11 @@ class GatewayService:
         )
 
         if not response:
-            raise PlayerCreationError("No response received from the team service")
+            raise PlayerError("No response received from the team service")
 
         created_player_data = response["data"]["create_player"]
         if created_player_data:
-            created_player: Optional[PlayerCreateType] = PlayerCreateType(
+            created_player: Optional[PlayerDataType] = PlayerDataType(
                 **created_player_data
             )
             log.info(f"Created player: {created_player}")
@@ -121,92 +163,128 @@ class GatewayService:
 
         error_messages = response["errors"][0]["message"]
         log.error(f"Error creating player: {error_messages}")
-        raise PlayerCreationError(error_messages)
+        raise PlayerError(error_messages)
 
     @staticmethod
-    async def create_score_via_graphql(
-        new_score: RatingInput,
-    ) -> Optional[RatingType]:
+    async def join_team(
+        team_data: TeamDataInput,
+    ) -> Optional[TeamData]:
         mutation = f"""
         mutation {{
-            create_score (new_score: {{
-                player_id: {new_score.player_id},
-                player_score: "{new_score.player_score}", 
-                player_team_id: {new_score.player_team_id}
+            join_team (team_data: {{
+                team_name: "{team_data.team_name}", 
+                team_password: "{team_data.team_password}"
             }}) {{
-                player_id
-                player_score
-                player_team_id
+                team_id
+                team_name
             }}
         }}
         """
         response = await GatewayService.send_request(
-            settings.RATING_SERVICE_URL, {"query": mutation}
+            settings.TEAM_SERVICE_URL, {"query": mutation}
         )
 
         if not response:
-            raise RatingCreationError("No response received from the rating service")
+            raise TeamError("No response received from the team service")
 
-        created_score_data = response["data"]["create_score"]
-        if created_score_data:
-            created_score: Optional[RatingType] = RatingType(**created_score_data)
-            log.info(f"Created score: {created_score}")
-            return created_score
+        joined_team_data = response["data"]["join_team"]
+        if joined_team_data:
+            joined_team: Optional[TeamData] = TeamData(**joined_team_data)
+            log.info(f"Joined team: {joined_team}")
+            return joined_team
 
         error_messages = response["errors"][0]["message"]
-        log.error(f"Error creating player: {error_messages}")
-        raise RatingCreationError(error_messages)
+        log.error(f"Error joining team: {error_messages}")
+        raise TeamError(error_messages)
 
     @staticmethod
-    async def send_team_info_via_rest(
-        team_created: TeamCreatedInput,
-    ) -> Optional[TeamCreatedType]:
-        payload = {
-            "teamId": team_created.team_id,
-            "teamName": team_created.team_name,
-        }
+    async def get_players_name(team_name: str) -> Optional[Dict[str, Any]]:
+        query = f"""
+        query {{
+            get_players (team_name: "{team_name}") {{
+                team_id
+                team_name
+                players_data {{
+                    player_id
+                    player_name
+                }}
+            }}
+        }}
+        """
         response = await GatewayService.send_request(
-            settings.FRONTEND_SERVICE_URL, payload
+            settings.TEAM_SERVICE_URL, {"query": query}
         )
-        return TeamCreatedType(**response) if response else None
+
+        if not response:
+            raise TeamError("No response received from the team service")
+
+        players_data = response["data"]["get_players"]
+        if players_data:
+            log.info(f"Players data: {players_data}")
+            return players_data
+
+        error_messages = response["errors"][0]["message"]
+        log.error(f"Error getting team info: {error_messages}")
+        raise TeamError(error_messages)
 
     @staticmethod
-    async def send_player_info_via_rest(
-        player_info: PlayerInfoInput,
-    ) -> Optional[PlayerInfoType]:
-        payload = {
-            "playerName": player_info.player_name,
-            "playerScore": player_info.player_score,
-        }
+    async def get_players_rating(team_id: int) -> Optional[Dict[str, Any]]:
+        query = f"""
+        query {{
+            get_players_rating (team_id: {team_id}) {{
+                team_id
+                players_data {{
+                    player_id
+                    player_average_rating
+                }}
+            }}
+        }}
+        """
         response = await GatewayService.send_request(
-            settings.FRONTEND_SERVICE_URL, payload
+            settings.RATING_SERVICE_URL, {"query": query}
         )
-        return PlayerInfoType(**response) if response else None
+
+        if not response:
+            raise TeamError("No response received from the rating service")
+
+        players_data = response["data"]["get_players_rating"]
+        if players_data:
+            log.info(f"Players data: {players_data}")
+            return players_data
+
+        error_messages = response["errors"][0]["message"]
+        log.error(f"Error getting team info: {error_messages}")
+        raise TeamError(error_messages)
 
     @staticmethod
-    async def player_info_check_and_consolidate(
-        player_id: int,
-    ) -> Optional[PlayerInfoType]:
-        team_message = redis_client.get_message(f"team_message_{player_id}")
-        rating_message = redis_client.get_message(f"rating_message_{player_id}")
-        if team_message and rating_message:
-            player_data = json.loads(team_message)
-            rating_data = json.loads(rating_message)
-            team_name = player_data["player_team_name"]
-            player_name = player_data["player_name"]
-            player_info = PlayerInfoInput(
-                player_id=player_id,
-                player_team_id=player_data["player_team_id"],
-                player_name=player_name,
-                player_score=rating_data["player_score"],
-            )
-            await GatewayService.send_player_info_via_rest(player_info)
-            redis_client.set_message(f"team_message_{player_id}", "")
-            redis_client.set_message(f"rating_message_{player_id}", "")
-            return PlayerInfoType(
-                player_team_id=player_info.player_team_id,
-                player_name=player_name,
-                player_team_name=team_name,
-                player_score=player_info.player_score,
-            )
-        return None
+    async def get_players_data(player_data: PlayerDataInput) -> TeamDetails:
+        players_data = await GatewayService.get_players_name(player_data.team_name)
+
+        if not players_data:
+            raise TeamError("No response received from the team service")
+
+        players_rating = await GatewayService.get_players_rating(
+            players_data["team_id"]
+        )
+
+        if not players_rating:
+            raise TeamError("No response received from the rating service")
+
+        player_ratings_dict = {
+            rating["player_id"]: rating["player_average_rating"]
+            for rating in players_rating["players_data"]
+        }
+        players_details = TeamDetails(
+            team_id=players_data["team_id"],
+            team_name=players_data["team_name"],
+            players_data=[
+                PlayerDetails(
+                    player_name=player["player_name"],
+                    player_average_rating=player_ratings_dict.get(
+                        player["player_id"], None
+                    ),
+                )
+                for player in players_data["players_data"]
+            ],
+        )
+        return players_details
