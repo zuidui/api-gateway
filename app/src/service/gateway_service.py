@@ -23,7 +23,6 @@ from models.team_model import (
     TeamData,
     TeamDetails,
     TeamDataInput,
-    TeamJoinInput,
 )
 
 from models.player_model import (
