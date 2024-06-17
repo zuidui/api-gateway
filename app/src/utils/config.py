@@ -25,11 +25,16 @@ class Settings(BaseSettings):
     TEAM_SERVICE_PORT: str
     FRONTEND_SERVICE_HOST: str
     FRONTEND_SERVICE_PORT: str
-    CACHE_HOST: str
-    CACHE_PORT: str
-    CACHE_DB: str
     RATING_SERVICE_HOST: str
     RATING_SERVICE_PORT: str
+    BROKER_HOST: str
+    BROKER_PORT: int
+    BROKER_HEARTBEAT: int
+    BROKER_CONNECTION_ATTEMPTS: int
+    BROKER_CONNECTION_TIMEOUT: int
+    BROKER_ATTEMPT_DELAY: int
+    QUEUE_NAME: str
+    EXCHANGE_NAME: str
 
     @property
     def RATING_SERVICE_URL(self):
@@ -44,8 +49,8 @@ class Settings(BaseSettings):
         return f"http://{self.FRONTEND_SERVICE_HOST}:{self.FRONTEND_SERVICE_PORT}"
 
     @property
-    def CACHE_URL(self):
-        return f"redis://{self.CACHE_HOST}:{self.CACHE_PORT}/{self.CACHE_DB}"
+    def BROKER_URL(self):
+        return f"amqp://{self.BROKER_HOST}:{self.BROKER_PORT}"
 
     class Config:
         env_file = ".env"
