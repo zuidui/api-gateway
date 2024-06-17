@@ -45,7 +45,7 @@ class GatewayService:
     ) -> Optional[Dict[Any, Any]]:
         try:
             log.info(f"Sending request to {url} with payload: {payload}")
-            async with httpx.AsyncClient(timeout=10) as client:
+            async with httpx.AsyncClient(timeout=5) as client:
                 response = await client.post(url, json=payload)
                 response.raise_for_status()
                 log.info(f"Response received from {url}: {response.json()}")
