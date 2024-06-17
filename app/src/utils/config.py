@@ -27,6 +27,14 @@ class Settings(BaseSettings):
     FRONTEND_SERVICE_PORT: str
     RATING_SERVICE_HOST: str
     RATING_SERVICE_PORT: str
+    BROKER_HOST: str
+    BROKER_PORT: int
+    BROKER_HEARTBEAT: int
+    BROKER_CONNECTION_ATTEMPTS: int
+    BROKER_CONNECTION_TIMEOUT: int
+    BROKER_ATTEMPT_DELAY: int
+    QUEUE_NAME: str
+    EXCHANGE_NAME: str
 
     @property
     def RATING_SERVICE_URL(self):
@@ -39,6 +47,10 @@ class Settings(BaseSettings):
     @property
     def FRONTEND_SERVICE_URL(self):
         return f"http://{self.FRONTEND_SERVICE_HOST}:{self.FRONTEND_SERVICE_PORT}"
+
+    @property
+    def BROKER_URL(self):
+        return f"amqp://{self.BROKER_HOST}:{self.BROKER_PORT}"
 
     class Config:
         env_file = ".env"

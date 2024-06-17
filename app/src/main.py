@@ -1,3 +1,5 @@
+import asyncio
+from contextlib import asynccontextmanager
 import uvicorn
 
 from fastapi import FastAPI
@@ -6,12 +8,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from utils.logger import logger_config
 from utils.config import get_settings
 
+from events.consumer import Consumer, start_consumer
+
 from routes.gateway_router import app_router
 from routes.health_router import health_router
 from routes.graphql_router import graphql_app, graphql_router
 
 log = logger_config(__name__)
 settings = get_settings()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    loop = asyncio.get_event_loop()
+    consumer: Consumer = await start_consumer(loop, app)
+    app.state.consumer = consumer
+    try:
+        yield
+    finally:
+        await consumer.close()
 
 
 def init_app():
@@ -38,6 +53,9 @@ def init_app():
     log.info(f"Frontend service URL: {settings.FRONTEND_SERVICE_URL}")
     log.info(f"Team service URL: {settings.TEAM_SERVICE_URL}")
     log.info(f"Rating service URL: {settings.RATING_SERVICE_URL}")
+    log.info(f"Broker: {settings.BROKER_URL}")
+    log.info(f"Queue name: {settings.QUEUE_NAME}")
+    log.info(f"Exchange name: {settings.EXCHANGE_NAME}")
 
     app = FastAPI(
         title=settings.IMAGE_NAME,
@@ -45,6 +63,7 @@ def init_app():
         version=settings.IMAGE_VERSION,
         openapi_url=f"{settings.API_PREFIX}/openapi.json",
         docs_url=settings.DOC_URL,
+        lifespan=lifespan,
     )
 
     origins = ["*"]

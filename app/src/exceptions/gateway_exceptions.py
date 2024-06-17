@@ -13,22 +13,12 @@ class BaseServiceError(Exception):
         super().__init__(message)
 
 
-class TeamCreationError(BaseServiceError):
+class TeamError(BaseServiceError):
     def __init__(self, message: str, status_code: int = 400):
         super().__init__(message, status_code)
 
 
-class PlayerCreationError(BaseServiceError):
-    def __init__(self, message: str, status_code: int = 400):
-        super().__init__(message, status_code)
-
-
-class TeamInfoError(BaseServiceError):
-    def __init__(self, message: str, status_code: int = 400):
-        super().__init__(message, status_code)
-
-
-class TeamJoinError(BaseServiceError):
+class PlayerError(BaseServiceError):
     def __init__(self, message: str, status_code: int = 400):
         super().__init__(message, status_code)
 
@@ -36,36 +26,18 @@ class TeamJoinError(BaseServiceError):
 app = FastAPI()
 
 
-@app.exception_handler(TeamCreationError)
-async def team_creation_exception_handler(request: Request, exc: TeamCreationError):
-    log.error(f"Team creation error: {exc.message}")
+@app.exception_handler(TeamError)
+async def team_error_handler(request: Request, exc: TeamError):
+    log.error(f"TeamError: {exc.message}")
     return JSONResponse(
         status_code=exc.status_code,
         content={"message": exc.message},
     )
 
 
-@app.exception_handler(PlayerCreationError)
-async def player_creation_exception_handler(request: Request, exc: PlayerCreationError):
-    log.error(f"Player creation error: {exc.message}")
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"message": exc.message},
-    )
-
-
-@app.exception_handler(TeamInfoError)
-async def team_info_exception_handler(request: Request, exc: TeamInfoError):
-    log.error(f"Team info error: {exc.message}")
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"message": exc.message},
-    )
-
-
-@app.exception_handler(TeamJoinError)
-async def team_join_exception_handler(request: Request, exc: TeamJoinError):
-    log.error(f"Team join error: {exc.message}")
+@app.exception_handler(PlayerError)
+async def player_error_handler(request: Request, exc: PlayerError):
+    log.error(f"PlayerError: {exc.message}")
     return JSONResponse(
         status_code=exc.status_code,
         content={"message": exc.message},
