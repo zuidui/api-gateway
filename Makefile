@@ -99,8 +99,9 @@ publish-image-pre: build ## Push the release candidate to the registry.
 	echo $(IMAGE_VERSION)
 	echo $(NEXT_RC)
 	envsubst < chart/api-gateway-rollout/values_template.yaml > chart/api-gateway-rollout/values.yaml 
+	cat chart/api-gateway-rollout/values_template.yaml 
 	cat chart/api-gateway-rollout/values.yaml 
-	cd chart/api-gateway-rollout
+	cd chart/
 	helm package api-gateway-rollout
 	helm upgrade api-gateway-rollout ./api-gateway-rollout-0.1.0.tgz
 
