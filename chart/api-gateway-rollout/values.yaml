@@ -18,11 +18,11 @@ ingress:
 ###############
 apiGateway:
   name: api-gateway
-  replicaCount: 5
+  replicaCount: 1
   image:
     repository: zuidui/api-gateway-dev
-    tag: 0.0.1
-    next_rc: rc22
+    tag: 0.0.2
+    next_rc: rc11
     
   containerPort: 8081
 

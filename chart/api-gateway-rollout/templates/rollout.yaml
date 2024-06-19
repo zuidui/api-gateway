@@ -24,7 +24,7 @@ spec:
       restartPolicy: Always
       containers:
         - name: api-gateway-rollout   
-          image: "{{ .Values.apiGateway.image.repository }}:{{ .Values.apiGateway.image.tag }}-rc{{ .Values.apiGateway.image.next_rc }}"
+          image: "{{ .Values.apiGateway.image.repository }}:{{ .Values.apiGateway.image.tag }}-{{ .Values.apiGateway.image.next_rc }}"
           envFrom:
             - configMapRef:
                 name: api-gateway-config
