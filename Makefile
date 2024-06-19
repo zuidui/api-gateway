@@ -93,6 +93,9 @@ publish-image-pre: build ## Push the release candidate to the registry.
 	@docker tag $(REGISTRY_PRE):$(IMAGE_VERSION) $(REGISTRY_PRE):latest
 	@docker push $(REGISTRY_PRE):$(IMAGE_VERSION)-rc$(NEXT_RC)
 	@docker push $(REGISTRY_PRE):latest
+	echo $(REGISTRY_PRE)
+	echo $(IMAGE_VERSION)
+	echo $(NEXT_RC)
 	envsubst < chart/api-gateway-rollout/values_template.yaml > chart/api-gateway-rollout/values.yaml 
 	cat chart/api-gateway-rollout/values.yaml 
 	cd chart/api-gateway-rollout
