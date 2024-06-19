@@ -21,7 +21,7 @@ apiGateway:
   replicaCount: 5
   image:
     repository: $REGISTRY_PRE
-    tag: $IMAGE_VERSION
+    #tag: $IMAGE_VERSION
     next_rc: $NEXT_RC
   containerPort: 8081
 
