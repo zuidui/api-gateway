@@ -20,10 +20,9 @@ apiGateway:
   name: api-gateway
   replicaCount: 5
   image:
-    repository: zuidui/api-gateway-dev
-    tag: 0.0.1
-    next_rc: rc22
-    
+    repository: ${REGISTRY_PRE}
+    tag: ${IMAGE_VERSION}
+    next_rc: $(NEXT_RC)
   containerPort: 8081
 
   service:
