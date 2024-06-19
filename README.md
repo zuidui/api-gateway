@@ -3,7 +3,6 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/zuidui/api-gateway)
 ![Docker Hub Image Version (latest by date)](https://img.shields.io/docker/v/zuidui/api-gateway?label=docker%20hub)
 ![GitHub](https://img.shields.io/github/license/zuidui/api-gateway)
-![GitHub contributors](https://img.shields.io/github/contributors/zuidui/api-gateway)
 
 ## Overview
 
