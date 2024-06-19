@@ -17,14 +17,18 @@ Ensure you have the following installed on your system:
 
 ## Project Structure
 
+- `.github/`: Contains GitHub Actions workflows.
+- `.vscode/`: Contains Visual Studio Code configurations for debugging.
+- `.devcontainer/`: Contains configurations for the development container.
 - `app/`
   - `docker-compose.yml`: Defines the services, their configurations, and networking.
   - `Dockerfile`: Defines the Docker image for the API Gateway service.
   - `requirements.txt`: Lists the Python dependencies for the project.
+  - `.env`: Environment variables used by Docker Compose and the application.
   - `src/`: Contains the source code for the application.
+    - `main.py`: Entry point for the FastAPI application.
     - `events/`: Event handling modules.
     - `exceptions/`: Custom exception classes.
-    - `main.py`: Entry point for the FastAPI application.
     - `models/`: Database models.
     - `resolver/`: GraphQL resolvers.
     - `routes/`: FastAPI route definitions.
@@ -39,7 +43,6 @@ Ensure you have the following installed on your system:
 - `CRD/`
   - Custom Resource Definitions for Kubernetes.
 - `scripts/`: Contains helper scripts.
-- `.env`: Environment variables used by Docker Compose and the application.
 - `Makefile`: Provides a set of commands to automate common tasks.
 - `LICENSE`: License file for the project.
 - `README.md`: This file.
