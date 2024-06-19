@@ -101,9 +101,8 @@ publish-image-pre: build ## Push the release candidate to the registry.
 	envsubst < chart/api-gateway-rollout/values_template.yaml > chart/api-gateway-rollout/values.yaml 
 	cat chart/api-gateway-rollout/values_template.yaml 
 	cat chart/api-gateway-rollout/values.yaml 
-	cd chart/
-	helm package api-gateway-rollout
-	helm upgrade api-gateway-rollout ./api-gateway-rollout-0.1.0.tgz
+	helm package chart/api-gateway-rollout
+	helm upgrade chart/api-gateway-rollout .chart/api-gateway-rollout-0.1.0.tgz
 
 .PHONY: publish-image-pro
 publish-image-pro:  ## Publish the latest release to the registry.
