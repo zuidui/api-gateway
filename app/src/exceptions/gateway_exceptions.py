@@ -23,6 +23,11 @@ class PlayerError(BaseServiceError):
         super().__init__(message, status_code)
 
 
+class RatingError(BaseServiceError):
+    def __init__(self, message: str, status_code: int = 400):
+        super().__init__(message, status_code)
+
+
 app = FastAPI()
 
 
@@ -38,6 +43,15 @@ async def team_error_handler(request: Request, exc: TeamError):
 @app.exception_handler(PlayerError)
 async def player_error_handler(request: Request, exc: PlayerError):
     log.error(f"PlayerError: {exc.message}")
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.message},
+    )
+
+
+@app.exception_handler(RatingError)
+async def rating_error_handler(request: Request, exc: RatingError):
+    log.error(f"RatingError: {exc.message}")
     return JSONResponse(
         status_code=exc.status_code,
         content={"message": exc.message},
