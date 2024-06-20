@@ -11,6 +11,10 @@ from models.player_model import (
     PlayerDataInput,
 )
 
+from models.rating_model import (
+    TeamScoreInput,
+)
+
 from service.gateway_service import GatewayService
 
 from exceptions.gateway_exceptions import (
@@ -91,3 +95,27 @@ async def join_player(request: PlayerDataInput) -> TeamDetails:
     except TeamError as e:
         raise e
     raise HTTPException(status_code=500, detail="Failed to join team")
+
+
+@app_router.post("/team/rate", response_model=TeamDetails, tags=["Rating"])
+async def rate_team(request: TeamScoreInput) -> TeamDetails:
+    log.info(f"Rating team with data: {request}")
+    try:
+        wait_event = asyncio.create_task(
+            GatewayService.wait_for_event("rating_updated")
+        )
+        rating_updated = await GatewayService.update_rating(request)
+        if rating_updated:
+            message = await wait_event
+            if message:
+                player_data_input = PlayerDataInput(
+                    team_name=request.team_name, player_name=""
+                )
+                return await GatewayService.get_players_data(player_data_input)
+            else:
+                raise HTTPException(
+                    status_code=504, detail="No message received from RabbitMQ"
+                )
+    except TeamError as e:
+        raise e
+    raise HTTPException(status_code=500, detail="Failed to rate team")
