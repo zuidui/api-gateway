@@ -4,6 +4,7 @@ import httpx
 from typing import Any, Dict, Optional
 
 from exceptions.gateway_exceptions import (
+    RatingError,
     TeamError,
     PlayerError,
 )
@@ -23,9 +24,13 @@ from models.team_model import (
     TeamData,
     TeamDetails,
     TeamDataInput,
+    TeamInfoData,
 )
 
+from models.rating_model import PlayerRating, TeamRatingInput, TeamScoreInput
+
 from models.player_model import (
+    PlayerData,
     PlayerDataInput,
     PlayerDetails,
 )
@@ -198,7 +203,7 @@ class GatewayService:
         raise TeamError(error_messages)
 
     @staticmethod
-    async def get_players_name(team_name: str) -> Optional[Dict[str, Any]]:
+    async def get_players_name(team_name: str) -> Optional[TeamInfoData]:
         query = f"""
         query {{
             get_players (team_name: "{team_name}") {{
@@ -228,7 +233,7 @@ class GatewayService:
         raise TeamError(error_messages)
 
     @staticmethod
-    async def get_players_rating(team_id: int) -> Optional[Dict[str, Any]]:
+    async def get_players_rating(team_id: int) -> Optional[PlayerData]:
         query = f"""
         query {{
             get_players_rating (team_id: {team_id}) {{
@@ -264,7 +269,7 @@ class GatewayService:
             raise TeamError("No response received from the team service")
 
         players_rating = await GatewayService.get_players_rating(
-            players_data["team_id"]
+            players_data["team_id"]  # type: ignore[index]
         )
 
         if not players_rating:
@@ -272,11 +277,11 @@ class GatewayService:
 
         player_ratings_dict = {
             rating["player_id"]: rating["player_average_rating"]
-            for rating in players_rating["players_data"]
+            for rating in players_rating["players_data"]  # type: ignore[index]
         }
         players_details = TeamDetails(
-            team_id=players_data["team_id"],
-            team_name=players_data["team_name"],
+            team_id=players_data["team_id"],  # type: ignore[index]
+            team_name=players_data["team_name"],  # type: ignore[index]
             players_data=[
                 PlayerDetails(
                     player_name=player["player_name"],
@@ -284,7 +289,56 @@ class GatewayService:
                         player["player_id"], None
                     ),
                 )
-                for player in players_data["players_data"]
+                for player in players_data["players_data"]  # type: ignore[index]
             ],
         )
         return players_details
+
+    @staticmethod
+    async def update_rating(team_data: TeamScoreInput) -> Optional[TeamDetails]:
+        players_info = await GatewayService.get_players_name(team_data.team_name)
+
+        # Need to consolidate player name and player rating with the player id to build the mutation
+        player_name_to_id = {
+            player["player_name"]: player["player_id"]
+            for player in players_info["players_data"]  # type: ignore[index]
+        }
+
+        player_ratings = []
+        for player in team_data.players_data:
+            player_id = player_name_to_id.get(player.player_name, None)
+            if player_id is not None:
+                player_ratings.append(
+                    PlayerRating(player_id=player_id, player_score=player.player_score)
+                )
+
+        team_rating_input = TeamRatingInput(
+            team_id=players_info["team_id"],  # type: ignore[index]
+            players_data=player_ratings,
+        )
+
+        mutation = f"""
+        mutation {{
+            rate_players (team_rating: {{
+                team_id: {team_rating_input.team_id},
+                players_data: [{', '.join([f'{{player_id: {rating.player_id}, player_score: {rating.player_score}}}' for rating in team_rating_input.players_data])}]
+            }}) {{
+                team_id
+            }}
+        }}
+        """
+        response = await GatewayService.send_request(
+            settings.RATING_SERVICE_URL, {"query": mutation}
+        )
+
+        if not response:
+            raise RatingError("No response received from the rating service")
+
+        updated_player_data = response["data"]["rate_players"]
+        if updated_player_data:
+            log.info(f"Updated players data: {updated_player_data}")
+            return updated_player_data
+
+        error_messages = response["errors"][0]["message"]
+        log.error(f"Error updating players rating: {error_messages}")
+        raise RatingError(error_messages)
