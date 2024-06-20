@@ -93,16 +93,16 @@ publish-image-pre: build ## Push the release candidate to the registry.
 	@docker tag $(REGISTRY_PRE):$(IMAGE_VERSION) $(REGISTRY_PRE):latest
 	@docker push $(REGISTRY_PRE):$(IMAGE_VERSION)-rc$(NEXT_RC)
 	@docker push $(REGISTRY_PRE):latest
-	export REGISTRY_PRE=zuidui/api-gateway-dev
-	export IMAGE_VERSION=0.0.3
-	echo $(REGISTRY_PRE)
-	echo $(IMAGE_VERSION)
-	echo $(NEXT_RC)
-	envsubst < chart/api-gateway-rollout/values_template.yaml > chart/api-gateway-rollout/values.yaml 
-	cat chart/api-gateway-rollout/values_template.yaml 
-	cat chart/api-gateway-rollout/values.yaml 
-	helm package chart/api-gateway-rollout
-	helm upgrade api-gateway-rollout ./chart/api-gateway-rollout-0.1.0.tgz
+## export REGISTRY_PRE=zuidui/api-gateway-dev
+## export IMAGE_VERSION=0.0.3
+## echo $(REGISTRY_PRE)
+## echo $(IMAGE_VERSION)
+## echo $(NEXT_RC)
+## envsubst < chart/api-gateway-rollout/values_template.yaml > chart/api-gateway-rollout/values.yaml 
+## cat chart/api-gateway-rollout/values_template.yaml 
+## cat chart/api-gateway-rollout/values.yaml 
+## helm package chart/api-gateway-rollout
+## helm upgrade api-gateway-rollout ./chart/api-gateway-rollout-0.1.0.tgz
 
 .PHONY: publish-image-pro
 publish-image-pro:  ## Publish the latest release to the registry.
